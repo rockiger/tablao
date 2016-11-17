@@ -1,10 +1,11 @@
 #! /usr/bin/env hy
 
-(def *rows* 1000)
-(def *cols* 1000)
-(def *width* 1000)
-(def *heigh* 800)
+(def *rows* 100)
+(def *cols* 26)
+(def *width* 1200)
+(def *height* 800)
 (def *window_title* "Tabler")
+(def *col_headers* (.split "A B C D E F G H I J K L M N O P Q R S T U V W X Y Z"))
 
 (import [sys]
         [PyQt5.QtWidgets [QApplication QMainWindow QDesktopWidget
@@ -18,21 +19,34 @@
       (.init_ui self))
 
   (defn init_ui [self]
-      (.show self)))
+      (.connect self.cellChanged self.c_current)
+      (.show self))
+
+  (defn c_current [self]
+    (let [row (.currentRow self)
+          col (.currentColumn self)
+          value (.text (.item self row col))]
+      (print "The current cell is " row " " col)
+      (print "In this cell we have: " value))))
 
 
 (defclass Sheet [QMainWindow]
   (defn --init-- [self]
-    (do
-      (.--init-- (super))
-      (.init_window self)))
+    (.--init-- (super))
+    (.init_window self))
 
   (defn init_window [self]
-    (let [form_widget (MyTable *rows* *cols*)]
-      (.resize self *width* *heigh*)
+    (let [form_widget (MyTable *rows* *cols*)
+          number (QTableWidgetItem "10")]
+      (.resize self *width* *height*)
       (.center self)
       (.setWindowTitle self *window_title*)
       (.setCentralWidget self form_widget)
+      (.setHorizontalHeaderLabels form_widget *col_headers*)
+
+      (.setCurrentCell form_widget 1 1)
+      (.setItem form_widget 1 1 number)
+
       (.show self)))
 
   (defn center [self]
