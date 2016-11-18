@@ -11,7 +11,8 @@
         [os]
         [csv]
         [PyQt5.QtWidgets [QApplication QMainWindow QDesktopWidget
-                          QTableWidget QTableWidgetItem QFileDialog]]
+                          QTableWidget QTableWidgetItem QFileDialog
+                          qApp QAction]]
         [PyQt5.QtGui [QIcon]])
 
 (defclass MyTable [QTableWidget]
@@ -39,8 +40,7 @@
       (if (!= (first path) "")
         (with [csv_file (open (first path) :newline "")]
           (.setRowCount self 0)
-          (let [my_file
-                (.reader csv csv_file :delimiter ";" :quotechar "|")]
+          (let [my_file (.reader csv csv_file :dialect "excel")]
             (for [row_data my_file]
               (let [row (.rowCount self)]
                 (.insertRow self row)
@@ -50,7 +50,22 @@
                   (let [item (QTableWidgetItem stuff)]
                     (.setItem self row column item)))))
             (.setRowCount self *rows*))))
-      (setv self.check_change true))))
+      (setv self.check_change true)))
+
+  (defn save_sheet [self]
+    (let [path (.getSaveFileName QFileDialog self "Save CSV"
+                                 (.getenv os "Home") "CSV(*.csv)")]
+      (if (!= (first path) "")
+        (with [csv_file (open (first path) "w")]
+          (let [writer (.writer csv csv_file :dialect "excel")]
+            (for [row (range (.rowCount self))]
+              (let [row_data []]
+                (for [col (range (.columnCount self))]
+                  (let [item (.item self row col)]
+                    (if (!= item None)
+                      (if (> (len (.text item)) 0)
+                          (.append row_data (.text item))))))
+                (.writerow writer row_data)))))))))
 
 
 (defclass Sheet [QMainWindow]
@@ -66,7 +81,7 @@
       (.setCentralWidget self form_widget)
       (.setHorizontalHeaderLabels form_widget *col_headers*)
 
-      (.open_sheet form_widget)
+      (.->menu self form_widget)
 
       (.show self)))
 
@@ -76,7 +91,29 @@
                 .availableGeometry
                 .center)]
       (.moveCenter qr cp)
-      (.move self (.topLeft qr)))))
+      (.move self (.topLeft qr))))
+
+  (defn ->menu [self table]
+    (let [bar (.menuBar self)
+          file (.addMenu bar "File")
+          open_action (QAction "&Open" self)
+          save_action (QAction "&Save" self)
+          quit_action (QAction "&Quit" self)]
+      (.setShortcut open_action "Ctrl+O")
+      (.setShortcut save_action "Ctrl+S")
+      (.setShortcut quit_action "Ctrl+Q")
+
+      (.addAction file open_action)
+      (.addAction file save_action)
+      (.addAction file quit_action)
+
+      (.connect open_action.triggered table.open_sheet)
+      (.connect save_action.triggered table.save_sheet)
+      (.connect quit_action.triggered self.quit_app)))
+
+  (defn quit_app [self]
+    (.quit qApp)))
+
 
 (defmain [&rest args]
   (let [app (QApplication sys.argv)
