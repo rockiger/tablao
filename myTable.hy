@@ -23,7 +23,6 @@
 ;; Data-definitions
 ;; =================
 
-
 ;; ==================
 ;; Global State
 ;; ==================
@@ -66,7 +65,8 @@
                   (let [item (QTableWidgetItem stuff)]
                     (.setItem self row column item)))))
             (.setRowCount self *rows*))))
-      (setv self.check_change true)))
+      (setv self.check_change true)
+      (print (.used_row_count self))))
 
   (defn save_sheet_csv [self]
     (let [path (.getSaveFileName QFileDialog self "Save CSV"
@@ -74,15 +74,14 @@
       (if (!= (first path) "")
         (with [csv_file (open (first path) "w")]
           (let [writer (.writer csv csv_file :dialect "excel")]
-            (for [row (range (.rowCount self))]
+            (for [row (range (inc (.used_row_count self)))]
               (let [row_data []]
-                (for [col (range (.columnCount self))]
+                (for [col (range (inc (.used_column_count self)))]
                   (let [item (.item self row col)]
                     (if (!= item None)
-                      (if (> (len (.text item)) 0)
-                          (.append row_data (.text item))))))
+                      (.append row_data (.text item))
+                      (.append row_data ""))))
                 (.writerow writer row_data))))))))
-
 
   (defn save_sheet_html [self]
     (let [path (.getSaveFileName QFileDialog self "Save HTML"
@@ -90,67 +89,31 @@
       (if (!= (first path) "")
         (with [file (open (first path) "w")]
           (.write file (qtable->html self))
-          (.close file))))))
+          (.close file)))))
 
+  (defn used_column_count [self]
+    "Returns the number of the last column with content, starts with 0"
+    (setv ucc 0)
+    (for [r (range (.rowCount self))]
+      (for [c (range (.columnCount self))]
+        (setv item (.item self r c))
+        (if (and (!= item None)
+                 (> (len (.text item)) 0)
+                 (> c ucc))
+          (setv ucc c))))
+    ucc)
 
-
-  ;; (defn save_sheet_html [self]
-  ;;   (let [path](.getSaveFileName QFileDialog self "Save HTML"
-  ;;                                (.getenv os "Home") "HTML(*.html)")
-  ;;     (if (!= (first path) "")
-  ;;       (with [file (open (first path) "w")]
-  ;;         (let [writer "<table>"]
-  ;;           (for [row (range (.rowCount self))]
-  ;;             (let [row_data "&&"]
-  ;;               (print "let1: " + row_data)
-  ;;               (for [col (range (.columnCount self))]
-  ;;                 (print "for: " row_data)
-  ;;                 (let [item (.item self row col)]
-  ;;                   (print "let2: " row_data)
-  ;;                   (if (!= item None)
-  ;;                     (if (> (len (.text item)) 0)
-  ;;                         (setv row_data (+ row_data (.text item)))))))
-  ;;               (setv writer (+ writer "\n<tr>" row_data "</tr>"))))
-  ;;           (setv writer (+ writer "\n</table>"))))))))
-
-(defn qtable->html [qtable]
-  "QTableWidget -> String
-   Consumes a QTableWidget qtable and
-   produces a string with that table in HTML"
-
-  (defn parse-rows [qtable row cols]
-    "QTableWidget Int Int -> String
-    Consumes a QTableWidget, the curren of the row and number of columns,
-    iterates over its rows and produces the rows in html"
-    (if (= row 0)
-      (if (!= "" (parse-cols qtable row cols))
-        (+ "<tr>\n" (parse-cols qtable row cols) "\n</tr>")
-        "")
-      (if (!= "" (parse-cols qtable row cols))
-        (+ (parse-rows qtable (dec row) cols)
-           "\n<tr>\n" (parse-cols qtable row cols) "\n</tr>")
-        (+ (parse-rows qtable (dec row) cols) (parse-cols qtable row cols)))))
-
-  (defn parse-cols [qtable row col]
-    "QTableWidget Int Int -> String
-    Consumes a QTableWidget, the current of row and column,
-    iterates over its rows and produces the rows in html"
-    (if (= col 0)
-      (parse-item qtable row col)
-      (+ (parse-cols qtable row (dec col)) (parse-item qtable row col))))
-
-  (defn parse-item [qtable row col]
-    "QTableWidget Int Int -> String
-    Consumes a QTableWidget, the current of row and column,
-    produces the rows in html"
-    (let [item (.item qtable row col)]
-      (if (!= item None)
-        (if (> (len (.text item)) 0)
-          (+ "<td>" (.text item) "</td>")
-          "")
-        "")))
-
-  (+ "<table>\n"(parse-rows qtable (.rowCount qtable) (.columnCount qtable)) "\n</table>"))
+  (defn used_row_count [self]
+    "Returns the number of the last row with content, starts with 0"
+    (setv urc 0)
+    (for [r (range (.rowCount self))]
+      (for [c (range (.columnCount self))]
+        (setv item (.item self r c))
+        (if (and (!= item None)
+                 (> (len (.text item)) 0)
+                 (> r urc))
+          (setv urc r))))
+    urc))
 
 (defclass Sheet [QMainWindow]
   (defn --init-- [self]
@@ -207,6 +170,53 @@
 ;; ==============
 ;; Functions
 ;; ==============
+
+
+(defn qtable->html [qtable]
+  "QTableWidget -> String
+   Consumes a QTableWidget qtable and
+   produces a string with that table in HTML"
+
+  (defn parse-rows [qtable row cols]
+    "QTableWidget Int Int -> String
+    Consumes a QTableWidget, the curren of the row and number of columns,
+    iterates over its rows and produces the rows in html"
+    (if (= row 0)
+      (if (!= "" (parse-cols qtable row cols))
+        (+ "<tr>\n" (parse-cols qtable row cols) "\n</tr>")
+        "")
+      (if (!= "" (parse-cols qtable row cols))
+        (+ (parse-rows qtable (dec row) cols)
+           "\n<tr>\n" (parse-cols qtable row cols) "\n</tr>")
+        (+ (parse-rows qtable (dec row) cols) (parse-cols qtable row cols)))))
+
+  (defn parse-cols [qtable row col]
+    "QTableWidget Int Int -> String
+    Consumes a QTableWidget, the current of row and column,
+    iterates over its rows and produces the rows in html"
+    (if (= col 0)
+      (parse-item qtable row col)
+      (+ (parse-cols qtable row (dec col)) (parse-item qtable row col))))
+
+  (defn parse-item [qtable row col]
+    "QTableWidget Int Int -> String
+    Consumes a QTableWidget, the current of row and column,
+    produces the rows in html"
+    (let [item (.item qtable row col)]
+      (if (!= item None)
+          (+ "<td>" (.text item) "</td>")
+          "<td></td>")))
+
+  (+ "<table>\n"
+     (parse-rows qtable
+                 (.used_row_count qtable)
+                 (.used_column_count qtable))
+     "\n</table>"))
+
+
+;; ==================
+;; Main
+;; ==================
 
 (defmain [&rest args]
   (let [app (QApplication sys.argv)
