@@ -27,6 +27,9 @@
 ;; Global State
 ;; ==================
 
+(def globals {"header" false})
+
+
 ;; =================
 ;; Objects
 ;; =================
@@ -118,7 +121,8 @@
 (defclass Sheet [QMainWindow]
   (defn --init-- [self]
     (.--init-- (super))
-    (.init_window self))
+    (.init_window self)
+    (setv self.header false))
 
   (defn init_window [self]
     (let [form_widget (MyTable *rows* *cols*)]
@@ -144,27 +148,38 @@
   (defn ->menu [self table]
     (let [bar (.menuBar self)
           file (.addMenu bar "File")
+          edit (.addMenu bar "Edit")
           open_action (QAction "&Open" self)
-          save_action_csv (QAction "&Save Csv" self)
-          save_action_html (QAction "Save Html" self)
-          quit_action (QAction "&Quit" self)]
+          save_action_csv (QAction "&Save as ..." self)
+          save_action_html (QAction "&Export as Html" self)
+          quit_action (QAction "&Quit" self)
+          set_header_action (QAction "Create table header" self)]
       (.setShortcut open_action "Ctrl+O")
       (.setShortcut save_action_csv "Ctrl+Shift+S")
-      (.setShortcut save_action_html "Ctrl+S")
+      (.setShortcut save_action_html "Ctrl+E")
       (.setShortcut quit_action "Ctrl+Q")
 
       (.addAction file open_action)
-      (.addAction file save_action_html)
       (.addAction file save_action_csv)
+      (.addAction file save_action_html)
       (.addAction file quit_action)
+
+      (.addAction edit set_header_action)
 
       (.connect open_action.triggered table.open_sheet)
       (.connect save_action_csv.triggered table.save_sheet_csv)
       (.connect save_action_html.triggered table.save_sheet_html)
-      (.connect quit_action.triggered self.quit_app)))
+      (.connect quit_action.triggered self.quit_app)
+
+      (.setCheckable set_header_action true)
+      (.connect set_header_action.triggered self.toggle_header)))
 
   (defn quit_app [self]
-    (.quit qApp)))
+    (.quit qApp))
+
+  (defn toggle_header [self]
+    (let [set_header (.sender self)]
+      (print (reset! globals "header" (.isChecked set_header))))))
 
 
 ;; ==============
@@ -213,6 +228,12 @@
                  (.used_column_count qtable))
      "\n</table>"))
 
+(defn reset! [state key new_value]
+  "Dict String Object -> Dict
+   Consumes a state dictionary, a key and the new value for that key.
+   Returns the new state object"
+  (setv (get state key) new_value)
+  state)
 
 ;; ==================
 ;; Main
