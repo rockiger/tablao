@@ -192,11 +192,16 @@
    Consumes a QTableWidget qtable and
    produces a string with that table in HTML"
 
+  (defn first_row []
+    (if (get globals "header")
+      1
+      0))
+
   (defn parse-rows [qtable row cols]
     "QTableWidget Int Int -> String
     Consumes a QTableWidget, the curren of the row and number of columns,
     iterates over its rows and produces the rows in html"
-    (if (= row 0)
+    (if (= row (first_row))
       (if (!= "" (parse-cols qtable row cols))
         (+ "<tr>\n" (parse-cols qtable row cols) "\n</tr>")
         "")
@@ -216,17 +221,40 @@
   (defn parse-item [qtable row col]
     "QTableWidget Int Int -> String
     Consumes a QTableWidget, the current of row and column,
-    produces the rows in html"
+    produces the row in html"
     (let [item (.item qtable row col)]
       (if (!= item None)
           (+ "<td>" (.text item) "</td>")
           "<td></td>")))
 
+  (defn parse-headercols [qtable row col]
+    "QTableWidget Int Int -> String
+    Consumes a QTableWidget, the current of row and column,
+    iterates over the header rows and produces the row in html"
+    (if (= col 0)
+      (parse-headeritem qtable row col)
+      (+ (parse-headercols qtable row (dec col)) (parse-headeritem qtable row col))))
+
+  (defn parse-headeritem [qtable row col]
+    "QTableWidget Int Int -> String
+    Consumes a QTableWidget, the current of row and column,
+    produces the header row in html"
+    (let [item (.item qtable row col)]
+      (if (!= item None)
+          (+ "<th>" (.text item) "</th>")
+          "<th></th>")))
+
   (+ "<table>\n"
+     (if (first_row)
+        (+ "<thead>\n<tr>\n"
+          (parse-headercols qtable 0 (.used_column_count qtable))
+          "</tr></thead>\n")
+        "")    
+     "<tbody>\n"
      (parse-rows qtable
                  (.used_row_count qtable)
                  (.used_column_count qtable))
-     "\n</table>"))
+     "\n</tbody>\n</table>"))
 
 (defn reset! [state key new_value]
   "Dict String Object -> Dict
