@@ -38,6 +38,7 @@
   (defn --init-- [self r c]
       (.--init-- (super) r c)
       (setv self.check_change true)
+      (setv self.header_bold false)
       (.init_ui self))
 
   (defn init_ui [self]
@@ -117,7 +118,23 @@
                  (> (len (.text item)) 0)
                  (> r urc))
           (setv urc r))))
-    urc))
+    urc)
+
+  (defn set_header_style [self bold]
+    "Bool -> Bool
+     Consumes the if style of header is bold or not
+     returns global state"
+    (for [col (range (.columnCount self))]
+     (setv item (.item self 0 col))
+     (if (!= item None)
+       (do
+         (setv font (.font item))
+         (print (.setBold font bold))
+         (print (.setFont item font)))))
+        ;  (-> item
+        ;      .font
+        ;      (.setBold bold)))))
+    globals))
 
 (defclass Sheet [QMainWindow]
   (defn --init-- [self]
@@ -173,14 +190,17 @@
       (.connect quit_action.triggered self.quit_app)
 
       (.setCheckable set_header_action true)
-      (.connect set_header_action.triggered self.toggle_header)))
+      (.connect set_header_action.triggered
+                (fn [] (.toggle_header self table))))) ; no self in arguments, cause is a FUNCTION, not a medthod
 
   (defn quit_app [self]
     (.quit qApp))
 
-  (defn toggle_header [self]
+  (defn toggle_header [self table]
     (let [set_header (.sender self)]
-      (print (reset! globals "header" (.isChecked set_header))))))
+      (.set_header_style table (.isChecked set_header))
+      (print (reset! globals "header" (.isChecked set_header)))
+      globals)))
 
 
 ;; ==============
