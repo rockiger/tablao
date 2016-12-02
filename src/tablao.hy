@@ -19,7 +19,7 @@
 (def *width* 1200)
 (def *height* 800)
 (def *app_title* "Tablao")
-(def *icon* (QIcon "icon.svg"))
+(def *icon* (QIcon "../icon.svg"))
 (def *ActiveWindowFocusReason* 3)
 
 ;; =================
