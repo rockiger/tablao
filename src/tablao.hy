@@ -6,8 +6,9 @@
         [table [Table]]
         [ext [htmlExport]]
         [PyQt5.QtWidgets [QApplication QMainWindow QDesktopWidget
-                          qApp QAction]]
-        [PyQt5.QtCore [QSettings QPoint]])
+                          qApp QAction QWidget QSplitter]]
+        [PyQt5.QtCore [QSettings QPoint]]
+        [PyQt5.QtWebKitWidgets [QWebView]])
 
 ;; =================
 ;; Data-definitions
@@ -27,20 +28,28 @@
     (print globals))
 
   (defn init_window [self]
-    (let [form_widget (Table *rows* *cols* self.set_title)]
+    (let [table (Table *rows* *cols* self.set_title)
+          central_widget (QSplitter)
+          webview (QWebView)]
       (.resize self *width* *height*)
       (.center self)
       (.set_title self)
       (.setWindowIcon self *icon*)
-      (.setCentralWidget self form_widget)
-      (.setHorizontalHeaderLabels form_widget *col_headers*)
+      (.setCentralWidget self central_widget)
 
-      (.->menu self form_widget)
+      (.addWidget central_widget table)
+      (.addWidget central_widget webview)
+      (.setSizes central_widget (, 50 50))
+
+      (.setHorizontalHeaderLabels table *col_headers*)
+
+      (.->menu self table)
 
       (if (get globals "filepath")
-        (.open_sheet form_widget (get globals "filepath")))
+        (.open_sheet table (get globals "filepath")))
 
       (.show self)))
+      ;(.hide webview)))
 
   (defn init_settings [self]
     (let [settings (get globals "settings")
