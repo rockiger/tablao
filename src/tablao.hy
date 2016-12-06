@@ -7,7 +7,7 @@
         [ext [htmlExport]]
         [PyQt5.QtWidgets [QApplication QMainWindow QDesktopWidget
                           qApp QAction QWidget QSplitter]]
-        [PyQt5.QtCore [QSettings QPoint]]
+        [PyQt5.QtCore [QSettings QPoint QUrl]]
         [PyQt5.QtWebKitWidgets [QWebView]])
 
 ;; =================
@@ -42,6 +42,9 @@
       (.setSizes central_widget (, 50 50))
 
       (.setHorizontalHeaderLabels table *col_headers*)
+
+      (.load webview (QUrl "file:/home/macco/Listings/tablao/test.html"))
+      ;(.setHtml webview test_html)
 
       (.->menu self table)
 
