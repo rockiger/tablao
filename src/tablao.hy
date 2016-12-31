@@ -31,6 +31,10 @@
     (let [table (Table *rows* *cols* self.set_title)
           central_widget (QSplitter)
           webview (QWebView)]
+
+      (reset! globals "table" table)
+      (reset! globals "webview" webview)
+
       (.resize self *width* *height*)
       (.center self)
       (.set_title self)
@@ -43,13 +47,16 @@
 
       (.setHorizontalHeaderLabels table *col_headers*)
 
-      (.load webview (QUrl "file:/home/macco/Listings/tablao/test.html"))
-      ;(.setHtml webview test_html)
+
+      ;(.load webview (QUrl "file:/home/macco/Listings/tablao/test.html"))
 
       (.->menu self table)
 
       (if (get globals "filepath")
         (.open_sheet table (get globals "filepath")))
+
+
+      (.setHtml webview (htmlExport.->preview table (get globals "header") *previewHeader* *previewFooter*))
 
       (.show self)))
       ;(.hide webview)))
@@ -101,7 +108,7 @@
     (.connect self.save_action_html.triggered table.save_sheet_html)
     (.connect self.quit_action.triggered self.quit_app)
 
-    (.setCheckable self.set_header_action true)
+    (.setCheckable self.set_header_action True)
     (.setChecked self.set_header_action (get globals "header"))
 
     (.connect self.set_header_action.triggered

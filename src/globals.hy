@@ -6,10 +6,12 @@
 ;; Global State
 ;; ==================
 
-(def globals {"header" true
+(def globals {"header" True
               "settings" (QSettings "Rockiger" "Tablao")
               "filepath" ""
-              "filechanged" false})
+              "filechanged" False
+              "table" None
+              "webview" None})
 
 ;; ==============
 ;; Functions

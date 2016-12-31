@@ -16,13 +16,14 @@
   (defn --init-- [self r c set_title]
       (.--init-- (super) r c)
       (setv self.set_title set_title)
-      (setv self.check_change true)
-      (setv self.header_bold false)
+      (setv self.check_change True)
+      (setv self.header_bold False)
       (.init_ui self)
       (.installEventFilter self self))
 
   (defn init_ui [self]
       (.connect self.cellChanged self.c_current)
+      (.connect self.cellChanged self.update_preview)
       (.connect self.cellChanged self.set_changed)
       (.show self))
 
@@ -34,6 +35,10 @@
           (print "The current cell is " row " " col)
           (print "In this cell we have: " value))))
 
+  (defn update_preview [self]
+    (if self.check_change
+      (.setHtml (get globals "webview") (htmlExport.->preview self (get globals "header") *previewHeader* *previewFooter*))))
+
   (defn open_sheet [self &optional defpath]
     (let [path
           (if defpath ; if defpath is not none, it mean we don't need to ask for a path
@@ -41,7 +46,7 @@
             (.getOpenFileName QFileDialog self "Open CSV"
                                   (.getenv os "Home") "CSV(*.csv)"))]
       (reset! globals "filepath" (first path))
-      (setv self.check_change false)
+      (setv self.check_change False)
       (if (!= (first path) "")
         (with [csv_file (open (first path) :newline "")]
           (.setRowCount self 0)
@@ -56,11 +61,12 @@
                     (.setItem self row column item)))))
             (.setRowCount self *rows*))))
       ;; set style for table header, if header is activated
-      (if (get globals "header") (.set_header_style self true))
+      (if (get globals "header") (.set_header_style self True))
       (print (.used_row_count self))
-      (setv self.check_change true)
-      (reset! globals "filechanged" false)
-      (.set_title self)))
+      (setv self.check_change True)
+      (reset! globals "filechanged" False)
+      (.set_title self)
+      (.update_preview self)))
 
   (defn save_sheet_csv [self &optional defpath]
     (let [path
@@ -80,7 +86,7 @@
                       (.append row_data ""))))
                 (.writerow writer row_data))))))
       (reset! globals "filepath" (first path))
-      (reset! globals "filechanged" false)
+      (reset! globals "filechanged" False)
       (.set_title self)))
 
   (defn save_sheet_html [self]
@@ -92,27 +98,27 @@
           (.close file)))))
 
   (defn used_column_count [self]
-    "Returns the number of the last column with content, starts with 0"
+    "Returns the number of the last column with content, starts with 0 none is used"
     (setv ucc 0)
     (for [r (range (.rowCount self))]
       (for [c (range (.columnCount self))]
         (setv item (.item self r c))
         (if (and (!= item None)
                  (> (len (.text item)) 0)
-                 (> c ucc))
-          (setv ucc c))))
+                 (>= c ucc))
+          (setv ucc (inc c)))))
     ucc)
 
   (defn used_row_count [self]
-    "Returns the number of the last row with content, starts with 0"
+    "Returns the number of the last row with content, starts with 0 if none is used"
     (setv urc 0)
     (for [r (range (.rowCount self))]
       (for [c (range (.columnCount self))]
         (setv item (.item self r c))
         (if (and (!= item None)
                  (> (len (.text item)) 0)
-                 (> r urc))
-          (setv urc r))))
+                 (>= r urc))
+          (setv urc (inc r)))))
     urc)
 
   (defn set_header_style [self bold]
@@ -135,13 +141,13 @@
         (print (.lostFocus ev))
         (print (.reason ev))
         (.on_focus_lost self ev)))
-    false)
+    False)
 
   (defn on_focus_lost [self ev]
     (.save_sheet_csv self (get globals "filepath"))
     (.set_title self))
 
   (defn set_changed [self]
-    (reset! globals "filechanged" true)
+    (reset! globals "filechanged" True)
     (.set_title self)
     (print "set_changed")))

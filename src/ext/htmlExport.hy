@@ -54,15 +54,26 @@
       (if (!= item None)
           (+ "<th>" (.text item) "</th>")
           "<th></th>")))
+  (print (+ "Used Col: " (str (.used_column_count qtable))))
+  (print (+ "Used Row: " (str (.used_row_count qtable))))
+  ;; look for a table with 0 rows or 0 columns
+  (if (or (= 0 (.used_column_count qtable)) (= 0 (.used_row_count qtable)))
+    ""
+    (+ "<table>\n"
+       (if (first_row)
+          (+ "<thead>\n<tr>\n"
+            (parse-headercols qtable 0 (dec (.used_column_count qtable)))
+            "</tr></thead>\n")
+          "")
+       "<tbody>\n"
+       (parse-rows qtable
+                   (dec (.used_row_count qtable))
+                   (dec (.used_column_count qtable)))
+       "\n</tbody>\n</table>")))
 
-  (+ "<table>\n"
-     (if (first_row)
-        (+ "<thead>\n<tr>\n"
-          (parse-headercols qtable 0 (.used_column_count qtable))
-          "</tr></thead>\n")
-        "")
-     "<tbody>\n"
-     (parse-rows qtable
-                 (.used_row_count qtable)
-                 (.used_column_count qtable))
-     "\n</tbody>\n</table>"))
+(defn ->preview [qtable theader? header footer]
+    "QTableWidget Bool String String -> String
+     Consumes a QTableWidget qtable, if the tableheader theader is true, the strings for the header and footer of the html
+     produces a string with that documen in HTML"
+     (+ header (qtable->html qtable theader?) footer))
+
