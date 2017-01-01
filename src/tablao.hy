@@ -113,7 +113,9 @@
 
     (.connect self.set_header_action.triggered
               ;; no self in arguments, cause is a FUNCTION, not a medthod
-              (fn [] (.toggle_header self table))))
+              (fn []
+                (.toggle_header self table)
+                (.update_preview (get globals "table")))))
 
   (defn quit_app [self]
       (.close self)
