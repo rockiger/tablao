@@ -58,8 +58,8 @@
 
       (.setHtml webview (htmlExport.->preview table (get globals "header") *previewHeader* *previewFooter*))
 
-      (.show self)))
-      ;(.hide webview)))
+      (.show self)
+      (.setVisible webview (get globals "preview"))))
 
   (defn init_settings [self]
     (let [settings (get globals "settings")
@@ -67,6 +67,9 @@
           set_header_action (.actionAt menu (QPoint 0 0))]
       (setv header (.value settings "table/header" :type bool))
       (reset! globals "header" header)
+
+      (setv preview (.value settings "window/preview" :type bool))
+      (reset! globals "preview" preview)
 
       (setv filepath (.value settings "table/filepath" :type str))
       (reset! globals "filepath" filepath)
@@ -91,10 +94,14 @@
     (setv self.save_action_html (QAction "&Export as Html" self))
     (setv self.quit_action (QAction "&Quit" self))
     (setv self.set_header_action (QAction "Create table header" self))
+    (setv self.set_preview_action (QAction "Toggle preview" self))
+
     (.setShortcut self.open_action "Ctrl+O")
     (.setShortcut self.save_action_csv "Ctrl+Shift+S")
     (.setShortcut self.save_action_html "Ctrl+E")
     (.setShortcut self.quit_action "Ctrl+Q")
+    (.setShortcut self.set_header_action "Ctrl+Shift+H")
+    (.setShortcut self.set_preview_action "Ctrl+P")
 
     (.addAction self.file self.open_action)
     (.addAction self.file self.save_action_csv)
@@ -102,6 +109,7 @@
     (.addAction self.file self.quit_action)
 
     (.addAction self.edit self.set_header_action)
+    (.addAction self.edit self.set_preview_action)
 
     (.connect self.open_action.triggered table.open_sheet)
     (.connect self.save_action_csv.triggered table.save_sheet_csv)
@@ -110,12 +118,18 @@
 
     (.setCheckable self.set_header_action True)
     (.setChecked self.set_header_action (get globals "header"))
-
     (.connect self.set_header_action.triggered
               ;; no self in arguments, cause is a FUNCTION, not a medthod
               (fn []
                 (.toggle_header self table)
-                (.update_preview (get globals "table")))))
+                (.update_preview (get globals "table"))))
+
+    (.setCheckable self.set_preview_action True)
+    (.setChecked self.set_preview_action (get globals "preview"))
+    (.connect self.set_preview_action.triggered
+              ;; no self in arguments, cause is a FUNCTION, not a medthod
+              (fn []
+                (.toggle_preview self (get globals "webview")))))
 
   (defn quit_app [self]
       (.close self)
@@ -124,7 +138,16 @@
   (defn toggle_header [self table]
     (let [set_header (.sender self)]
       (.set_header_style table (.isChecked set_header))
+      (.update_preview (get globals "table"))
       (print (reset! globals "header" (.isChecked set_header)))
+      globals))
+
+  (defn toggle_preview [self preview]
+    "Webview -> Global State"
+    (let [show_preview (.sender self)]
+      (.setVisible preview (.isChecked show_preview))
+      (.update_preview (get globals "table"))
+      (print (reset! globals "preview" (.isChecked show_preview)))
       globals))
 
   (defn closeEvent [self ev]
@@ -132,6 +155,7 @@
       (print "closeEvent")
       (print (get globals "header"))
       (.setValue settings "table/header" (get globals "header"))
+      (.setValue settings "window/preview" (get globals "preview"))
       (.setValue settings "table/filepath" (get globals "filepath"))
       (.sync settings)))
 

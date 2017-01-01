@@ -7,6 +7,7 @@
 ;; ==================
 
 (def globals {"header" True
+              "preview" True
               "settings" (QSettings "Rockiger" "Tablao")
               "filepath" ""
               "filechanged" False
