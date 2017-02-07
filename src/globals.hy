@@ -11,8 +11,8 @@
               "settings" (QSettings "Rockiger" "Tablao")
               "filepath" ""
               "filechanged" False
-              "table" None
-              "webview" None})
+              "table" None     ; QTableWidget that holds the table
+              "webview" None}) ; Webview for preview
 
 ;; ==============
 ;; Functions

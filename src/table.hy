@@ -39,6 +39,15 @@
     (if self.check_change
       (.setHtml (get globals "webview") (htmlExport.->preview self (get globals "header") *previewHeader* *previewFooter*))))
 
+  (defn new_sheet [self]
+    (if (and (= (get globals "filepath") *untitled_path*)
+             (> (.used_row_count self) 0))
+      (.save_sheet_csv self)
+      (.save_sheet_csv self (get globals "filepath")))
+    (reset! globals "filepath" *untitled_path*)
+    (.clear self)
+    (.save_sheet_csv self (get globals "filepath")))
+
   (defn open_sheet [self &optional defpath]
     (let [path
           (if defpath ; if defpath is not none, it mean we don't need to ask for a path
@@ -98,7 +107,7 @@
           (.close file)))))
 
   (defn used_column_count [self]
-    "Returns the number of the last column with content, starts with 0 none is used"
+    "Returns the number of the last column with content, starts with 0 if none is used"
     (setv ucc 0)
     (for [r (range (.rowCount self))]
       (for [c (range (.columnCount self))]
@@ -150,4 +159,8 @@
   (defn set_changed [self]
     (reset! globals "filechanged" True)
     (.set_title self)
-    (print "set_changed")))
+    (print "set_changed"))
+
+  (defn clear [self]
+    (.setRowCount self 0)
+    (.setRowCount self *rows*)))

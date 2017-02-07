@@ -89,6 +89,7 @@
     (setv self.bar (.menuBar self))
     (setv self.file (.addMenu self.bar "File"))
     (setv self.edit (.addMenu self.bar "Edit"))
+    (setv self.new_action  (QAction "&New" self))
     (setv self.open_action (QAction "&Open" self))
     (setv self.save_action_csv (QAction "&Save as ..." self))
     (setv self.save_action_html (QAction "&Export as Html" self))
@@ -96,6 +97,7 @@
     (setv self.set_header_action (QAction "Create table header" self))
     (setv self.set_preview_action (QAction "Toggle preview" self))
 
+    (.setShortcut self.new_action "Ctrl+N")
     (.setShortcut self.open_action "Ctrl+O")
     (.setShortcut self.save_action_csv "Ctrl+Shift+S")
     (.setShortcut self.save_action_html "Ctrl+E")
@@ -103,6 +105,7 @@
     (.setShortcut self.set_header_action "Ctrl+Shift+H")
     (.setShortcut self.set_preview_action "Ctrl+P")
 
+    (.addAction self.file self.new_action)
     (.addAction self.file self.open_action)
     (.addAction self.file self.save_action_csv)
     (.addAction self.file self.save_action_html)
@@ -111,6 +114,7 @@
     (.addAction self.edit self.set_header_action)
     (.addAction self.edit self.set_preview_action)
 
+    (.connect self.new_action.triggered table.new_sheet)
     (.connect self.open_action.triggered table.open_sheet)
     (.connect self.save_action_csv.triggered table.save_sheet_csv)
     (.connect self.save_action_html.triggered table.save_sheet_html)
@@ -160,9 +164,15 @@
       (.sync settings)))
 
   (defn set_title [self]
-    (.setWindowTitle self (+ (get globals "filepath")
-                             (if (get globals "filechanged") " * " "")
-                             " — " *app_title*))
+    "set title of window"
+    (setv filepath (get globals "filepath"))
+    (if (= filepath *untitled_path*)
+      (.setWindowTitle self (+ "UNTITLED"
+                               (if (get globals "filechanged") " * " "")
+                               " — " *app_title*))
+      (.setWindowTitle self (+ filepath
+                               (if (get globals "filechanged") " * " "")
+                               " — " *app_title*)))
     (print "set_title")))
 
 ;; ==================

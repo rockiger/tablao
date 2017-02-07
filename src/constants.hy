@@ -13,6 +13,7 @@
 (def *app_title* "Tablao")
 (def *icon* (QIcon "../icon.svg"))
 (def *ActiveWindowFocusReason* 3)
+(def *untitled_path* "/tmp/tablao_untitled")
 (def *previewHeader*
      "<!DOCTYPE html>
      <html>
