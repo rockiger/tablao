@@ -25,15 +25,18 @@
       (.connect self.cellChanged self.c_current)
       (.connect self.cellChanged self.update_preview)
       (.connect self.cellChanged self.set_changed)
+      (.connect self.cellChanged (fn []
+                                  (if (get globals "header")
+                                    (.set_header_style self True))))
       (.show self))
 
   (defn c_current [self]
     (if self.check_change
         (let [row (.currentRow self)
-              col (.currentColumn self)
-              value (.text (.item self row col))]
-          (print "The current cell is " row " " col)
-          (print "In this cell we have: " value))))
+              col (.currentColumn self)]
+              ;value (.text (.item self row col))]
+          (print "The current cell is " row " " col))))
+          ;(print "In this cell we have: " value))))
 
   (defn update_preview [self]
     (if self.check_change
