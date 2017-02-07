@@ -10,16 +10,18 @@
 
   (defn parse-rows [qtable row cols]
     "QTableWidget Int Int -> String
-    Consumes a QTableWidget, the curren of the row and number of columns,
+    Consumes a QTableWidget, the current of the row and number of columns,
     iterates over its rows and produces the rows in html"
-    (if (= row (first_row))
-      (if (!= "" (parse-cols qtable row cols))
-        (+ "<tr>\n" (parse-cols qtable row cols) "\n</tr>")
-        "")
-      (if (!= "" (parse-cols qtable row cols))
-        (+ (parse-rows qtable (dec row) cols)
-           "\n<tr>\n" (parse-cols qtable row cols) "\n</tr>")
-        (+ (parse-rows qtable (dec row) cols) (parse-cols qtable row cols)))))
+    (if (or (not header) (> (.used_row_count qtable) 1))
+      (if (= row (first_row))
+        (if (!= "" (parse-cols qtable row cols))
+          (+ "<tr>\n" (parse-cols qtable row cols) "\n</tr>")
+          "")
+        (if (!= "" (parse-cols qtable row cols))
+          (+ (parse-rows qtable (dec row) cols)
+             "\n<tr>\n" (parse-cols qtable row cols) "\n</tr>")
+          (+ (parse-rows qtable (dec row) cols) (parse-cols qtable row cols))))
+      ""))
 
   (defn parse-cols [qtable row col]
     "QTableWidget Int Int -> String
@@ -76,4 +78,3 @@
      Consumes a QTableWidget qtable, if the tableheader theader is true, the strings for the header and footer of the html
      produces a string with that documen in HTML"
      (+ header (qtable->html qtable theader?) footer))
-
