@@ -33,10 +33,12 @@
   (defn c_current [self]
     (if self.check_change
         (let [row (.currentRow self)
-              col (.currentColumn self)]
-              ;value (.text (.item self row col))]
-          (print "The current cell is " row " " col))))
-          ;(print "In this cell we have: " value))))
+              col (.currentColumn self)
+              value (try
+                      (.text (.item self row col))
+                      (except [e AttributeError] ""))]
+          (print "The current cell is " row " " col)
+          (print "In this cell we have: " value))))
 
   (defn update_preview [self]
     (if self.check_change
@@ -49,7 +51,8 @@
       (.save_sheet_csv self (get globals "filepath")))
     (reset! globals "filepath" *untitled_path*)
     (.clear self)
-    (.save_sheet_csv self (get globals "filepath")))
+    (.save_sheet_csv self (get globals "filepath"))
+    (.update_preview self))
 
   (defn open_sheet [self &optional defpath]
     (let [path
@@ -165,5 +168,6 @@
     (print "set_changed"))
 
   (defn clear [self]
-    (.setRowCount self 0)
-    (.setRowCount self *rows*)))
+    ;(.setRowCount self 0)
+    ;(.setRowCount self *rows*)))
+    (.clearContents self)))

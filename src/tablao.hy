@@ -158,6 +158,7 @@
     (let [settings (get globals "settings")]
       (print "closeEvent")
       (print (get globals "header"))
+      (.save_sheet_csv (get globals "table") (get globals "filepath"))
       (.setValue settings "table/header" (get globals "header"))
       (.setValue settings "window/preview" (get globals "preview"))
       (.setValue settings "table/filepath" (get globals "filepath"))
