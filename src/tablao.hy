@@ -88,7 +88,7 @@
   (defn ->menu [self table]
     (setv self.bar (.menuBar self))
     (setv self.file (.addMenu self.bar "File"))
-    (setv self.edit (.addMenu self.bar "Edit"))
+    (setv self.view (.addMenu self.bar "View"))
     (setv self.new_action  (QAction "&New" self))
     (setv self.open_action (QAction "&Open" self))
     (setv self.save_action_csv (QAction "&Save as ..." self))
@@ -103,7 +103,7 @@
     (.setShortcut self.save_action_html "Ctrl+E")
     (.setShortcut self.quit_action "Ctrl+Q")
     (.setShortcut self.set_header_action "Ctrl+Shift+H")
-    (.setShortcut self.set_preview_action "Ctrl+P")
+    (.setShortcut self.set_preview_action "Ctrl+Shift+P")
 
     (.addAction self.file self.new_action)
     (.addAction self.file self.open_action)
@@ -111,8 +111,8 @@
     (.addAction self.file self.save_action_html)
     (.addAction self.file self.quit_action)
 
-    (.addAction self.edit self.set_header_action)
-    (.addAction self.edit self.set_preview_action)
+    (.addAction self.view self.set_header_action)
+    (.addAction self.view self.set_preview_action)
 
     (.connect self.new_action.triggered table.new_sheet)
     (.connect self.open_action.triggered table.open_sheet)
