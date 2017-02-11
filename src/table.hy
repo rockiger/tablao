@@ -28,7 +28,14 @@
       (.connect self.cellChanged (fn []
                                   (if (get globals "header")
                                     (.set_header_style self True))))
+      (.connect self.itemSelectionChanged self.set_selection)
       (.show self))
+
+  (defn set_selection [self]
+    (print "SELECTION START")
+    (for [item (.selectedItems self)]
+      (print (.text item)))
+    (print "SELECTION STOP"))
 
   (defn c_current [self]
     (if self.check_change
