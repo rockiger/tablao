@@ -32,10 +32,17 @@
       (.show self))
 
   (defn set_selection [self]
+    "Void -> Void
+    Inserts the selection to the primary clipboard. http://doc.qt.io/qt-5/qclipboard.html#Mode-enum"
     (.copy-selection self :clipboard-mode *clipboard-mode-selection*))
 
   (defn copy-selection [self &key {clipboard-mode *clipboard-mode-clipboard*}]
-    (print "copy-selection")
+    "Int(0,2) -> Void
+    Copies the current selection to the clipboard. Depending on the clipboard-mode to define which clipboard system is used
+    QClipboard::Clipboard	0	indicates that data should be stored and retrieved from the global clipboard.
+    QClipboard::Selection	1	indicates that data should be stored and retrieved from the global mouse selection. Support for Selection is provided only on systems with a global mouse selection (e.g. X11).
+    QClipboard::FindBuffer	2	indicates that data should be stored and retrieved from the Find buffer. This mode is used for holding search strings on macOS.
+    http://doc.qt.io/qt-5/qclipboard.html#Mode-enum"
     (if (> (len (.selectedRanges self)) 1)
       (print "WARNING: Copy only work on first selection"))
     (setv r (first (.selectedRanges self)))
@@ -50,12 +57,7 @@
               (setv copy-content (+ copy-content "\t"))))))
       (if-not (= row (.bottomRow r))
         (setv copy-content (+ copy-content "\n"))))
-    (.setText (get globals "clipboard") copy-content clipboard-mode)
-    (print "clipboard mode")
-    (print (. (get globals "clipboard") Clipboard))
-    (print "START copy-content")
-    (print copy-content)
-    (print "STOP copy-content"))
+    (.setText (get globals "clipboard") copy-content clipboard-mode))
 
   (defn c_current [self]
     (if self.check_change
