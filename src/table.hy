@@ -32,25 +32,9 @@
       (.show self))
 
   (defn set_selection [self]
-    (print "SELECTION START")
-    (setv r (first (.selectedRanges self)))
-    (print "bottomRow: " (.bottomRow r))
-    (print "columnCount: "(.columnCount r))
-    (print "leftColumn: "(.leftColumn r))
-    (print "rightColumn: "(.rightColumn r))
-    (print "rowCount: "(.rowCount r))
-    (print "topRow: "(.topRow r))
-    (for [row (range (.topRow r) (inc (.bottomRow r)))]
-      (for [col (range (.leftColumn r) (inc (.rightColumn r)))]
-        (let [item (.item self row col)]
-          (if (!= item None)
-            (print (.text item))
-            (print "")))))
-
-    (print "SELECTION STOP"))
+    (.copy-selection self :clipboard-mode *clipboard-mode-selection*))
 
   (defn copy-selection [self &key {clipboard-mode *clipboard-mode-clipboard*}]
-
     (print "copy-selection")
     (if (> (len (.selectedRanges self)) 1)
       (print "WARNING: Copy only work on first selection"))
