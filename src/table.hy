@@ -33,9 +33,45 @@
 
   (defn set_selection [self]
     (print "SELECTION START")
-    (for [item (.selectedItems self)]
-      (print (.text item)))
+    (setv r (first (.selectedRanges self)))
+    (print "bottomRow: " (.bottomRow r))
+    (print "columnCount: "(.columnCount r))
+    (print "leftColumn: "(.leftColumn r))
+    (print "rightColumn: "(.rightColumn r))
+    (print "rowCount: "(.rowCount r))
+    (print "topRow: "(.topRow r))
+    (for [row (range (.topRow r) (inc (.bottomRow r)))]
+      (for [col (range (.leftColumn r) (inc (.rightColumn r)))]
+        (let [item (.item self row col)]
+          (if (!= item None)
+            (print (.text item))
+            (print "")))))
+
     (print "SELECTION STOP"))
+
+  (defn copy-selection [self &key {clipboard-mode *clipboard-mode-clipboard*}]
+
+    (print "copy-selection")
+    (if (> (len (.selectedRanges self)) 1)
+      (print "WARNING: Copy only work on first selection"))
+    (setv r (first (.selectedRanges self)))
+    (setv copy-content "")
+    (for [row (range (.topRow r) (inc (.bottomRow r)))]
+      (for [col (range (.leftColumn r) (inc (.rightColumn r)))]
+        (setv item (.item self row col))
+        (if (!= item None)
+          (do
+            (setv copy-content (+ copy-content (.text item)))
+            (if-not (= col (.rightColumn r))
+              (setv copy-content (+ copy-content "\t"))))))
+      (if-not (= row (.bottomRow r))
+        (setv copy-content (+ copy-content "\n"))))
+    (.setText (get globals "clipboard") copy-content clipboard-mode)
+    (print "clipboard mode")
+    (print (. (get globals "clipboard") Clipboard))
+    (print "START copy-content")
+    (print copy-content)
+    (print "STOP copy-content"))
 
   (defn c_current [self]
     (if self.check_change
@@ -84,7 +120,7 @@
             (.setRowCount self *rows*))))
       ;; set style for table header, if header is activated
       (if (get globals "header") (.set_header_style self True))
-      (print (.used_row_count self))
+      ;(print (.used_row_count self))
       (setv self.check_change True)
       (reset! globals "filechanged" False)
       (.set_title self)

@@ -88,12 +88,14 @@
   (defn ->menu [self table]
     (setv self.bar (.menuBar self))
     (setv self.file (.addMenu self.bar "File"))
+    (setv self.edit (.addMenu self.bar "Edit"))
     (setv self.view (.addMenu self.bar "View"))
     (setv self.new_action  (QAction "&New" self))
     (setv self.open_action (QAction "&Open" self))
     (setv self.save_action_csv (QAction "&Save as ..." self))
     (setv self.save_action_html (QAction "&Export as Html" self))
     (setv self.quit_action (QAction "&Quit" self))
+    (setv self.copy_action (QAction "Copy" self))
     (setv self.set_header_action (QAction "Create table header" self))
     (setv self.set_preview_action (QAction "Toggle preview" self))
 
@@ -102,6 +104,7 @@
     (.setShortcut self.save_action_csv "Ctrl+Shift+S")
     (.setShortcut self.save_action_html "Ctrl+E")
     (.setShortcut self.quit_action "Ctrl+Q")
+    (.setShortcut self.copy_action "Ctrl+C")
     (.setShortcut self.set_header_action "Ctrl+Shift+H")
     (.setShortcut self.set_preview_action "Ctrl+Shift+P")
 
@@ -111,6 +114,8 @@
     (.addAction self.file self.save_action_html)
     (.addAction self.file self.quit_action)
 
+    (.addAction self.edit self.copy_action)
+
     (.addAction self.view self.set_header_action)
     (.addAction self.view self.set_preview_action)
 
@@ -119,6 +124,8 @@
     (.connect self.save_action_csv.triggered table.save_sheet_csv)
     (.connect self.save_action_html.triggered table.save_sheet_html)
     (.connect self.quit_action.triggered self.quit_app)
+
+    (.connect self.copy_action.triggered table.copy-selection)
 
     (.setCheckable self.set_header_action True)
     (.setChecked self.set_header_action (get globals "header"))
@@ -182,5 +189,7 @@
 
 (defmain [&rest args]
   (let [app (QApplication sys.argv)
-        mainWindow (MainWindow)]
+        mainWindow (MainWindow)
+        clipboard (.clipboard QApplication)]
+    (reset! globals "clipboard" clipboard)
     (.exit sys (.exec_ app))))

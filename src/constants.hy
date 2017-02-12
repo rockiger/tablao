@@ -14,6 +14,8 @@
 (def *icon* (QIcon "../icon.svg"))
 (def *ActiveWindowFocusReason* 3)
 (def *untitled_path* "/tmp/tablao_untitled")
+(def *clipboard-mode-clipboard* 0)
+(def *clipboard-mode-selection* 1)
 (def *previewHeader*
      "<!DOCTYPE html>
      <html>

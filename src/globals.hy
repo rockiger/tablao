@@ -12,7 +12,8 @@
               "filepath" ""
               "filechanged" False
               "table" None     ; QTableWidget that holds the table
-              "webview" None}) ; Webview for preview
+              "webview" None ; Webview for preview
+              "clipboard" None})
 
 ;; ==============
 ;; Functions
