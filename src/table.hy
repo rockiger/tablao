@@ -36,6 +36,30 @@
     Inserts the selection to the primary clipboard. http://doc.qt.io/qt-5/qclipboard.html#Mode-enum"
     (.copy-selection self :clipboard-mode *clipboard-mode-selection*))
 
+  (defn paste [self &key {clipboard-mode *clipboard-mode-clipboard*}]
+    "Void -> Void
+    Inserts the clipboard, at the upper left corner of the current selection"
+    (if (> (len (.selectedRanges self)) 1)
+      (print "WARNING: Paste only works on first selection"))
+    (setv r (first (.selectedRanges self)))
+    (setv paste-list (.parse-for-paste self (first (.text (get globals "clipboard") "plain" clipboard-mode))))
+    (if (= r None)
+      (do
+        (setv start-row (.currentRow self))
+        (setv start-col (.currentColumn self)))
+      (do
+        (setv start-col (.leftColumn r))
+        (setv start-row (.topRow r))))
+    (setv pl-rnr 0)
+    (for [row (range start-row (+ start-row (len paste-list)))]
+      (setv pl-cnr 0)
+      (for [col (range start-col (+ start-col (len (get paste-list pl-rnr))))]
+        (setv item (QTableWidgetItem (get (get paste-list pl-rnr) pl-cnr)))
+        (.setItem self row col item)
+        (setv pl-cnr (inc pl-cnr)))
+      (setv pl-rnr (inc pl-rnr))))
+
+
   (defn copy-selection [self &key {clipboard-mode *clipboard-mode-clipboard*}]
     "Int(0,2) -> Void
     Copies the current selection to the clipboard. Depending on the clipboard-mode to define which clipboard system is used
@@ -44,20 +68,24 @@
     QClipboard::FindBuffer	2	indicates that data should be stored and retrieved from the Find buffer. This mode is used for holding search strings on macOS.
     http://doc.qt.io/qt-5/qclipboard.html#Mode-enum"
     (if (> (len (.selectedRanges self)) 1)
-      (print "WARNING: Copy only work on first selection"))
+      (print "WARNING: Copy only works on first selection"))
     (setv r (first (.selectedRanges self)))
     (setv copy-content "")
-    (for [row (range (.topRow r) (inc (.bottomRow r)))]
-      (for [col (range (.leftColumn r) (inc (.rightColumn r)))]
-        (setv item (.item self row col))
-        (if (!= item None)
-          (do
-            (setv copy-content (+ copy-content (.text item)))
-            (if-not (= col (.rightColumn r))
-              (setv copy-content (+ copy-content "\t"))))))
-      (if-not (= row (.bottomRow r))
-        (setv copy-content (+ copy-content "\n"))))
-    (.setText (get globals "clipboard") copy-content clipboard-mode))
+    (try
+      (do
+        (for [row (range (.topRow r) (inc (.bottomRow r)))]
+          (for [col (range (.leftColumn r) (inc (.rightColumn r)))]
+            (setv item (.item self row col))
+            (if (!= item None)
+              (do
+                (setv copy-content (+ copy-content (.text item)))
+                (if-not (= col (.rightColumn r))
+                  (setv copy-content (+ copy-content "\t"))))))
+          (if-not (= row (.bottomRow r))
+            (setv copy-content (+ copy-content "\n"))))
+        (.setText (get globals "clipboard") copy-content clipboard-mode))
+      (except [e AttributeError]
+        (print "WARING: No selection available"))))
 
   (defn c_current [self]
     (if self.check_change
@@ -199,4 +227,18 @@
   (defn clear [self]
     ;(.setRowCount self 0)
     ;(.setRowCount self *rows*)))
-    (.clearContents self)))
+    (.clearContents self))
+
+  (defn parse-for-paste [self clipboard-text]
+    "String -> List[][]
+    Consumes a String clipboard-text and produces a 2-dimensional list with
+    lines and columns. Example:
+    'Test\tTest\tTest\n1\t1\t2\t3' -> [['Test', 'Test', 'Test'], ['1', '2', '3']]"
+    (setv paste-list [])
+    (setv row [])
+    (let [lns (.split (.strip clipboard-text) "\n")]
+      (print lns)
+      (for [ln lns]
+        (print ln)
+        (.append paste-list (.split ln "\t"))))
+    paste-list))

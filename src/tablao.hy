@@ -90,12 +90,16 @@
     (setv self.file (.addMenu self.bar "File"))
     (setv self.edit (.addMenu self.bar "Edit"))
     (setv self.view (.addMenu self.bar "View"))
+
     (setv self.new_action  (QAction "&New" self))
     (setv self.open_action (QAction "&Open" self))
     (setv self.save_action_csv (QAction "&Save as ..." self))
     (setv self.save_action_html (QAction "&Export as Html" self))
     (setv self.quit_action (QAction "&Quit" self))
+
     (setv self.copy_action (QAction "Copy" self))
+    (setv self.paste_action (QAction "Paste" self))
+
     (setv self.set_header_action (QAction "Create table header" self))
     (setv self.set_preview_action (QAction "Toggle preview" self))
 
@@ -104,7 +108,10 @@
     (.setShortcut self.save_action_csv "Ctrl+Shift+S")
     (.setShortcut self.save_action_html "Ctrl+E")
     (.setShortcut self.quit_action "Ctrl+Q")
+
     (.setShortcut self.copy_action "Ctrl+C")
+    (.setShortcut self.paste_action "Ctrl+V")
+
     (.setShortcut self.set_header_action "Ctrl+Shift+H")
     (.setShortcut self.set_preview_action "Ctrl+Shift+P")
 
@@ -115,6 +122,7 @@
     (.addAction self.file self.quit_action)
 
     (.addAction self.edit self.copy_action)
+    (.addAction self.edit self.paste_action)
 
     (.addAction self.view self.set_header_action)
     (.addAction self.view self.set_preview_action)
@@ -126,6 +134,7 @@
     (.connect self.quit_action.triggered self.quit_app)
 
     (.connect self.copy_action.triggered table.copy-selection)
+    (.connect self.paste_action.triggered table.paste)
 
     (.setCheckable self.set_header_action True)
     (.setChecked self.set_header_action (get globals "header"))
