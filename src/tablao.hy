@@ -157,9 +157,10 @@
 
   (defn toggle_header [self table]
     (let [set_header (.sender self)]
-      (.set_header_style table (.isChecked set_header))
-      (.update_preview (get globals "table"))
+      (print "ISCHECKED " (.isChecked set_header))
       (print (reset! globals "header" (.isChecked set_header)))
+      (.set_header_style table (get globals "header"))
+      (.update_preview (get globals "table"))
       globals))
 
   (defn toggle_preview [self preview]

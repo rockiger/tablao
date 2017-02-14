@@ -202,8 +202,8 @@
      (if (!= item None)
        (do
          (setv font (.font item))
-         (print (.setBold font bold))
-         (print (.setFont item font)))))
+         (.setBold font bold)
+         (.setFont item font))))
     globals)
 
   (defn eventFilter [self object ev]
