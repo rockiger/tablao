@@ -6,7 +6,7 @@
         [globals [*]]
         [ext [htmlExport]]
         [PyQt5.QtWidgets [QTableWidget QTableWidgetItem QFileDialog]]
-        [PyQt5.QtCore [QEvent]])
+        [PyQt5.QtCore [QEvent Qt]])
 
 ;; =================
 ;; Objects
@@ -31,13 +31,27 @@
       (.connect self.itemSelectionChanged self.set_selection)
       (.show self))
 
+  ;; BUG This primary clipboard is not working as it shoult, feature suspended
+  ; (defn mousePressEvent [self event]
+  ;   (when (= (.button event) Qt.MidButton)
+  ;     (print "PASTE")
+  ;     (setv item (.itemAt self (.pos event)))
+  ;     (setv tmp (.selectionMode self))
+  ;     (.setSelectionMode self 0)
+  ;     (.setCurrentItem self item)
+  ;     (.paste self *clipboard-mode-selection*)
+  ;     (.setSelectionMode self tmp)
+  ;     (print (.itemAt self (.pos event))))
+  ;   (.mousePressEvent (super) event))
+
   (defn set_selection [self]
     "Void -> Void
     Inserts the selection to the primary clipboard. http://doc.qt.io/qt-5/qclipboard.html#Mode-enum"
-    (.copy-selection self :clipboard-mode *clipboard-mode-selection*))
+    (when (not (= (.selectionMode self) 0))
+      (.copy-selection self :clipboard-mode *clipboard-mode-selection*)))
 
   (defn paste [self &key {clipboard-mode *clipboard-mode-clipboard*}]
-    "Void -> Void
+    "Void (Enum(0-2)) -> Void
     Inserts the clipboard, at the upper left corner of the current selection"
     (if (> (len (.selectedRanges self)) 1)
       (print "WARNING: Paste only works on first selection"))
