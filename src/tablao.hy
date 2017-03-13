@@ -7,7 +7,7 @@
         [ext [htmlExport]]
         [PyQt5.QtWidgets [QApplication QMainWindow QDesktopWidget
                           qApp QAction QWidget QSplitter]]
-        [PyQt5.QtCore [QSettings QPoint QUrl]]
+        [PyQt5.QtCore [QSettings QPoint QUrl Qt]]
         [PyQt5.QtWebKitWidgets [QWebView]])
 
 ;; =================
@@ -99,6 +99,8 @@
 
     (setv self.copy_action (QAction "Copy" self))
     (setv self.paste_action (QAction "Paste" self))
+    (setv self.cut_action (QAction "Cut" self))
+    (setv self.delete_action (QAction "Delete" self))
 
     (setv self.set_header_action (QAction "Create table header" self))
     (setv self.set_preview_action (QAction "Toggle preview" self))
@@ -111,18 +113,25 @@
 
     (.setShortcut self.copy_action "Ctrl+C")
     (.setShortcut self.paste_action "Ctrl+V")
+    (.setShortcut self.cut_action "Ctrl+X")
+    (.setShortcuts self.delete_action [Qt.Key_Delete Qt.Key_Backspace])
 
     (.setShortcut self.set_header_action "Ctrl+Shift+H")
     (.setShortcut self.set_preview_action "Ctrl+Shift+P")
 
     (.addAction self.file self.new_action)
     (.addAction self.file self.open_action)
+    (.addSeparator self.file)
     (.addAction self.file self.save_action_csv)
     (.addAction self.file self.save_action_html)
+    (.addSeparator self.file)
     (.addAction self.file self.quit_action)
 
     (.addAction self.edit self.copy_action)
     (.addAction self.edit self.paste_action)
+    (.addAction self.edit self.cut_action)
+    (.addSeparator self.edit)
+    (.addAction self.edit self.delete_action)
 
     (.addAction self.view self.set_header_action)
     (.addAction self.view self.set_preview_action)
@@ -135,6 +144,8 @@
 
     (.connect self.copy_action.triggered table.copy-selection)
     (.connect self.paste_action.triggered table.paste)
+    (.connect self.cut_action.triggered table.cut-selection)
+    (.connect self.delete_action.triggered table.delete-selection)
 
     (.setCheckable self.set_header_action True)
     (.setChecked self.set_header_action (get globals "header"))

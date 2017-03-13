@@ -1,9 +1,9 @@
 Nachricht,Anzahl,Antworten,Negative,Positv,Neutral,
-"Hallo, wie geht's?",5,0,0,0,0,
+"Hallo, wie geht's?",0,0,0,0,0,
 "Hallo,
 wie geht’s dir? Hast du Lust auf eine spontane Begegnung, damit wir uns besser kennenlernen können? Viele Grüße
-Mahou",7,0,0,0,0,
+Mahou",7,5,0,0,0,
 Individuelle Nachricht,5,5,4,5,0,
-Spaßfrage,5,5,0,0,5,
+Spaßfrage,5,5,5,0,5,
 Lächeln,5,4,4,0,1,
 ,,,,,,

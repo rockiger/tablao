@@ -5,7 +5,7 @@
         [constants [*]]
         [globals [*]]
         [ext [htmlExport]]
-        [PyQt5.QtWidgets [QTableWidget QTableWidgetItem QFileDialog]]
+        [PyQt5.QtWidgets [QTableWidget QTableWidgetItem QFileDialog QAction]]
         [PyQt5.QtCore [QEvent Qt]])
 
 ;; =================
@@ -22,14 +22,17 @@
       (.installEventFilter self self))
 
   (defn init_ui [self]
-      (.connect self.cellChanged self.c_current)
-      (.connect self.cellChanged self.update_preview)
-      (.connect self.cellChanged self.set_changed)
-      (.connect self.cellChanged (fn []
-                                  (if (get globals "header")
-                                    (.set_header_style self True))))
-      (.connect self.itemSelectionChanged self.set_selection)
-      (.show self))
+    (.connect self.cellChanged self.c_current)
+    (.connect self.cellChanged self.update_preview)
+    (.connect self.cellChanged self.set_changed)
+    (.connect self.cellChanged (fn []
+                                (if (get globals "header")
+                                  (.set_header_style self True))))
+    (.connect self.itemSelectionChanged self.set_selection)
+
+
+
+    (.show self))
 
   ;; BUG This primary clipboard is not working as it shoult, feature suspended
   ; (defn mousePressEvent [self event]
@@ -100,6 +103,17 @@
         (.setText (get globals "clipboard") copy-content clipboard-mode))
       (except [e AttributeError]
         (print "WARING: No selection available"))))
+
+  (defn delete-selection [self]
+    "Void -> Void
+    Deletes the current selection."
+    (print "DELETE-SELECTION")
+    (for [item (.selectedItems self)]
+      (.setText item "")))
+
+  (defn cut-selection [self]
+    (.copy-selection self)
+    (.delete-selection self))
 
   (defn c_current [self]
     (if self.check_change
