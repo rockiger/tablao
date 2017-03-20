@@ -27,7 +27,7 @@
     "QTableWidget Int Int -> String
     Consumes a QTableWidget, the current of row and column,
     iterates over its rows and produces the rows in html"
-    (if (= col 0)
+    (if (zero? col)
       (parse-item qtable row col)
       (+ (parse-cols qtable row (dec col)) (parse-item qtable row col))))
 
@@ -44,7 +44,7 @@
     "QTableWidget Int Int -> String
     Consumes a QTableWidget, the current of row and column,
     iterates over the header rows and produces the row in html"
-    (if (= col 0)
+    (if (zero? col)
       (parse-headeritem qtable row col)
       (+ (parse-headercols qtable row (dec col)) (parse-headeritem qtable row col))))
 
@@ -59,7 +59,7 @@
   (print (+ "Used Col: " (str (.used_column_count qtable))))
   (print (+ "Used Row: " (str (.used_row_count qtable))))
   ;; look for a table with 0 rows or 0 columns
-  (if (or (= 0 (.used_column_count qtable)) (= 0 (.used_row_count qtable)))
+  (if (or (zero? (.used_column_count qtable)) (zero? (.used_row_count qtable)))
     ""
     (+ "<table>\n"
        (if (first_row)

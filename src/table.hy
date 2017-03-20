@@ -50,7 +50,7 @@
   (defn set_selection [self]
     "Void -> Void
     Inserts the selection to the primary clipboard. http://doc.qt.io/qt-5/qclipboard.html#Mode-enum"
-    (when (not (= (.selectionMode self) 0))
+    (when-not (zero? (.selectionMode self))
       (.copy-selection self :clipboard-mode *clipboard-mode-selection*)))
 
   (defn paste [self &key {clipboard-mode *clipboard-mode-clipboard*}]
@@ -93,11 +93,10 @@
         (for [row (range (.topRow r) (inc (.bottomRow r)))]
           (for [col (range (.leftColumn r) (inc (.rightColumn r)))]
             (setv item (.item self row col))
-            (if (!= item None)
-              (do
-                (setv copy-content (+ copy-content (.text item)))
-                (if-not (= col (.rightColumn r))
-                  (setv copy-content (+ copy-content "\t"))))))
+            (when (!= item None)
+              (setv copy-content (+ copy-content (.text item)))
+              (if-not (= col (.rightColumn r))
+                (setv copy-content (+ copy-content "\t")))))
           (if-not (= row (.bottomRow r))
             (setv copy-content (+ copy-content "\n"))))
         (.setText (get globals "clipboard") copy-content clipboard-mode))
@@ -131,7 +130,7 @@
 
   (defn new_sheet [self]
     (if (and (= (get globals "filepath") *untitled_path*)
-             (> (.used_row_count self) 0))
+             (pos? (.used_row_count self)))
       (.save_sheet_csv self)
       (.save_sheet_csv self (get globals "filepath")))
     (reset! globals "filepath" *untitled_path*)
@@ -204,7 +203,7 @@
       (for [c (range (.columnCount self))]
         (setv item (.item self r c))
         (if (and (!= item None)
-                 (> (len (.text item)) 0)
+                 (pos? (len (.text item)))
                  (>= c ucc))
           (setv ucc (inc c)))))
     ucc)
@@ -216,7 +215,7 @@
       (for [c (range (.columnCount self))]
         (setv item (.item self r c))
         (if (and (!= item None)
-                 (> (len (.text item)) 0)
+                 (pos? (len (.text item)))
                  (>= r urc))
           (setv urc (inc r)))))
     urc)
@@ -227,20 +226,18 @@
      returns global state"
     (for [col (range (.columnCount self))]
      (setv item (.item self 0 col))
-     (if (!= item None)
-       (do
-         (setv font (.font item))
-         (.setBold font bold)
-         (.setFont item font))))
+     (when (!= item None)
+       (setv font (.font item))
+       (.setBold font bold)
+       (.setFont item font)))
     globals)
 
   (defn eventFilter [self object ev]
-    (if (and (= (.type ev) QEvent.FocusOut) (= (.reason ev) *ActiveWindowFocusReason*))
-      (do
-        (print "QtCore.QEvent.FocusOut")
-        (print (.lostFocus ev))
-        (print (.reason ev))
-        (.on_focus_lost self ev)))
+    (when (and (= (.type ev) QEvent.FocusOut) (= (.reason ev) *ActiveWindowFocusReason*))
+      (print "QtCore.QEvent.FocusOut")
+      (print (.lostFocus ev))
+      (print (.reason ev))
+      (.on_focus_lost self ev))
     False)
 
   (defn on_focus_lost [self ev]
