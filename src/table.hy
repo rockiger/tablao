@@ -29,12 +29,9 @@
                                 (if (get globals "header")
                                   (.set_header_style self True))))
     (.connect self.itemSelectionChanged self.set_selection)
-
-
-
     (.show self))
 
-  ;; BUG This primary clipboard is not working as it shoult, feature suspended
+  ;; BUG This primary clipboard is not working as it should, feature suspended
   ; (defn mousePressEvent [self event]
   ;   (when (= (.button event) Qt.MidButton)
   ;     (print "PASTE")
@@ -50,7 +47,7 @@
   (defn set_selection [self]
     "Void -> Void
     Inserts the selection to the primary clipboard. http://doc.qt.io/qt-5/qclipboard.html#Mode-enum"
-    (when-not (zero? (.selectionMode self))
+    (when (pos? (.selectionMode self))
       (.copy-selection self :clipboard-mode *clipboard-mode-selection*)))
 
   (defn paste [self &key {clipboard-mode *clipboard-mode-clipboard*}]
