@@ -35,10 +35,10 @@
     "QTableWidget Int Int -> String
     Consumes a QTableWidget, the current of row and column,
     produces the row in html"
-    (let [item (.item qtable row col)]
-      (if (!= item None)
-          (+ "<td>" (.text item) "</td>")
-          "<td></td>")))
+    (setv item (.item qtable row col))
+    (if (!= item None)
+        (+ "<td>" (.text item) "</td>")
+        "<td></td>"))
 
   (defn parse-headercols [qtable row col]
     "QTableWidget Int Int -> String
@@ -52,10 +52,10 @@
     "QTableWidget Int Int -> String
     Consumes a QTableWidget, the current of row and column,
     produces the header row in html"
-    (let [item (.item qtable row col)]
-      (if (!= item None)
-          (+ "<th>" (.text item) "</th>")
-          "<th></th>")))
+    (setv item (.item qtable row col))
+    (if (!= item None)
+        (+ "<th>" (.text item) "</th>")
+        "<th></th>"))
   (print (+ "Used Col: " (str (.used_column_count qtable))))
   (print (+ "Used Row: " (str (.used_row_count qtable))))
   ;; look for a table with 0 rows or 0 columns

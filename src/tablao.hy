@@ -28,62 +28,62 @@
     (print globals))
 
   (defn init_window [self]
-    (let [table (Table *rows* *cols* self.set_title)
+    (setv table (Table *rows* *cols* self.set_title)
           central_widget (QSplitter)
-          webview (QWebView)]
+          webview (QWebView))
 
-      (reset! globals "table" table)
-      (reset! globals "webview" webview)
+    (reset! globals "table" table)
+    (reset! globals "webview" webview)
 
-      (.resize self *width* *height*)
-      (.center self)
-      (.set_title self)
-      (.setWindowIcon self *icon*)
-      (.setCentralWidget self central_widget)
+    (.resize self *width* *height*)
+    (.center self)
+    (.set_title self)
+    (.setWindowIcon self *icon*)
+    (.setCentralWidget self central_widget)
 
-      (.addWidget central_widget table)
-      (.addWidget central_widget webview)
-      (.setSizes central_widget (, 50 50))
+    (.addWidget central_widget table)
+    (.addWidget central_widget webview)
+    (.setSizes central_widget (, 50 50))
 
-      (.setHorizontalHeaderLabels table *col_headers*)
-
-
-      ;(.load webview (QUrl "file:/home/macco/Listings/tablao/test.html"))
-
-      (.->menu self table)
-
-      (if (get globals "filepath")
-        (.open_sheet table (get globals "filepath")))
+    (.setHorizontalHeaderLabels table *col_headers*)
 
 
-      (.setHtml webview (htmlExport.->preview table (get globals "header") *previewHeader* *previewFooter*))
+    ;(.load webview (QUrl "file:/home/macco/Listings/tablao/test.html"))
 
-      (.show self)
-      (.setVisible webview (get globals "preview"))))
+    (.->menu self table)
+
+    (if (get globals "filepath")
+      (.open_sheet table (get globals "filepath")))
+
+
+    (.setHtml webview (htmlExport.->preview table (get globals "header") *previewHeader* *previewFooter*))
+
+    (.show self)
+    (.setVisible webview (get globals "preview")))
 
   (defn init_settings [self]
-    (let [settings (get globals "settings")
+    (setv settings (get globals "settings")
           menu (.menuBar self)
-          set_header_action (.actionAt menu (QPoint 0 0))]
-      (setv header (.value settings "table/header" :type bool))
-      (reset! globals "header" header)
+          set_header_action (.actionAt menu (QPoint 0 0)))
+    (setv header (.value settings "table/header" :type bool))
+    (reset! globals "header" header)
 
-      (setv preview (.value settings "window/preview" :type bool))
-      (reset! globals "preview" preview)
+    (setv preview (.value settings "window/preview" :type bool))
+    (reset! globals "preview" preview)
 
-      (setv filepath (.value settings "table/filepath" :type str))
-      (reset! globals "filepath" filepath)
+    (setv filepath (.value settings "table/filepath" :type str))
+    (reset! globals "filepath" filepath)
 
-      (print (get globals "filepath"))))
+    (print (get globals "filepath")))
 
 
   (defn center [self]
-    (let [qr (.frameGeometry self)
+    (setv qr (.frameGeometry self)
           cp (-> (QDesktopWidget)
                 .availableGeometry
-                .center)]
-      (.moveCenter qr cp)
-      (.move self (.topLeft qr))))
+                .center))
+    (.moveCenter qr cp)
+    (.move self (.topLeft qr)))
 
   (defn ->menu [self table]
     (setv self.bar (.menuBar self))
@@ -167,30 +167,30 @@
       (.quit qApp))
 
   (defn toggle_header [self table]
-    (let [set_header (.sender self)]
-      (print "ISCHECKED " (.isChecked set_header))
-      (print (reset! globals "header" (.isChecked set_header)))
-      (.set_header_style table (get globals "header"))
-      (.update_preview (get globals "table"))
-      globals))
+    (setv set_header (.sender self))
+    (print "ISCHECKED " (.isChecked set_header))
+    (print (reset! globals "header" (.isChecked set_header)))
+    (.set_header_style table (get globals "header"))
+    (.update_preview (get globals "table"))
+    globals)
 
   (defn toggle_preview [self preview]
     "Webview -> Global State"
-    (let [show_preview (.sender self)]
-      (.setVisible preview (.isChecked show_preview))
-      (.update_preview (get globals "table"))
-      (print (reset! globals "preview" (.isChecked show_preview)))
-      globals))
+    (setv show_preview (.sender self))
+    (.setVisible preview (.isChecked show_preview))
+    (.update_preview (get globals "table"))
+    (print (reset! globals "preview" (.isChecked show_preview)))
+    globals)
 
   (defn closeEvent [self ev]
-    (let [settings (get globals "settings")]
-      (print "closeEvent")
-      (print (get globals "header"))
-      (.save_sheet_csv (get globals "table") (get globals "filepath"))
-      (.setValue settings "table/header" (get globals "header"))
-      (.setValue settings "window/preview" (get globals "preview"))
-      (.setValue settings "table/filepath" (get globals "filepath"))
-      (.sync settings)))
+    (setv settings (get globals "settings"))
+    (print "closeEvent")
+    (print (get globals "header"))
+    (.save_sheet_csv (get globals "table") (get globals "filepath"))
+    (.setValue settings "table/header" (get globals "header"))
+    (.setValue settings "window/preview" (get globals "preview"))
+    (.setValue settings "table/filepath" (get globals "filepath"))
+    (.sync settings))
 
   (defn set_title [self]
     "set title of window"
@@ -209,8 +209,8 @@
 ;; ==================
 
 (defmain [&rest args]
-  (let [app (QApplication sys.argv)
+  (setv app (QApplication sys.argv)
         mainWindow (MainWindow)
-        clipboard (.clipboard QApplication)]
-    (reset! globals "clipboard" clipboard)
-    (.exit sys (.exec_ app))))
+        clipboard (.clipboard QApplication))
+  (reset! globals "clipboard" clipboard)
+  (.exit sys (.exec_ app)))

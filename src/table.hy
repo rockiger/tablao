@@ -116,14 +116,14 @@
     (.delete-selection self))
 
   (defn c_current [self]
-    (if self.check_change
-        (let [row (.currentRow self)
+    (when self.check_change
+        (setv row (.currentRow self)
               col (.currentColumn self)
               value (try
                       (.text (.item self row col))
-                      (except [e AttributeError] ""))]
-          (print "The current cell is " row " " col)
-          (print "In this cell we have: " value))))
+                      (except [e AttributeError] "")))
+        (print "The current cell is " row " " col)
+        (print "In this cell we have: " value)))
 
   (defn update_preview [self]
     (if self.check_change
@@ -140,62 +140,62 @@
     (.update_preview self))
 
   (defn open_sheet [self &optional defpath]
-    (let [path
+    (setv path
           (if defpath ; if defpath is not none, it mean we don't need to ask for a path
             [defpath] ; put defpath in a dict, to simulate QFileDialog
             (.getOpenFileName QFileDialog self "Open CSV"
-                                  (.getenv os "Home") "CSV(*.csv)"))]
-      (reset! globals "filepath" (first path))
-      (setv self.check_change False)
-      (if (!= (first path) "")
-        (with [csv_file (open (first path) :newline "")]
-          (.setRowCount self 0)
-          (let [my_file (.reader csv csv_file :dialect "excel")]
-            (for [row_data my_file]
-              (let [row (.rowCount self)]
-                (.insertRow self row)
-                (if (> (len row_data) *cols*)
-                    (.setColumnCount self (len row_data)))
-                (for [[column stuff] (enumerate row_data)]
-                  (let [item (QTableWidgetItem stuff)]
-                    (.setItem self row column item)))))
-            (.setRowCount self *rows*))))
-      ;; set style for table header, if header is activated
-      (if (get globals "header") (.set_header_style self True))
-      ;(print (.used_row_count self))
-      (setv self.check_change True)
-      (reset! globals "filechanged" False)
-      (.set_title self)
-      (.update_preview self)))
+                                  (.getenv os "Home") "CSV(*.csv)")))
+    (reset! globals "filepath" (first path))
+    (setv self.check_change False)
+    (if (!= (first path) "")
+      (with [csv_file (open (first path) :newline "")]
+        (.setRowCount self 0)
+        (setv my_file (.reader csv csv_file :dialect "excel"))
+        (for [row_data my_file]
+          (setv row (.rowCount self))
+          (.insertRow self row)
+          (if (> (len row_data) *cols*)
+              (.setColumnCount self (len row_data)))
+          (for [[column stuff] (enumerate row_data)]
+            (setv item (QTableWidgetItem stuff))
+            (.setItem self row column item)))
+        (.setRowCount self *rows*)))
+    ;; set style for table header, if header is activated
+    (if (get globals "header") (.set_header_style self True))
+    ;(print (.used_row_count self))
+    (setv self.check_change True)
+    (reset! globals "filechanged" False)
+    (.set_title self)
+    (.update_preview self))
 
   (defn save_sheet_csv [self &optional defpath]
-    (let [path
+    (setv path
           (if defpath ; if defpath is not none, it mean we don't need to ask for a path
             [defpath] ; put defpath in a dict, to simulate QFileDialog
             (.getSaveFileName QFileDialog self "Save CSV"
-                                 (.getenv os "Home") "CSV(*.csv)"))]
-      (if (!= (first path) "")
-        (with [csv_file (open (first path) "w")]
-          (let [writer (.writer csv csv_file :dialect "excel")]
-            (for [row (range (inc (.used_row_count self)))]
-              (let [row_data []]
-                (for [col (range (inc (.used_column_count self)))]
-                  (let [item (.item self row col)]
-                    (if (!= item None)
-                      (.append row_data (.text item))
-                      (.append row_data ""))))
-                (.writerow writer row_data))))))
-      (reset! globals "filepath" (first path))
-      (reset! globals "filechanged" False)
-      (.set_title self)))
+                                 (.getenv os "Home") "CSV(*.csv)")))
+    (if (!= (first path) "")
+      (with [csv_file (open (first path) "w")]
+        (setv writer (.writer csv csv_file :dialect "excel"))
+        (for [row (range (inc (.used_row_count self)))]
+          (setv row_data [])
+          (for [col (range (inc (.used_column_count self)))]
+            (setv item (.item self row col))
+            (if (!= item None)
+              (.append row_data (.text item))
+              (.append row_data "")))
+          (.writerow writer row_data))))
+    (reset! globals "filepath" (first path))
+    (reset! globals "filechanged" False)
+    (.set_title self))
 
   (defn save_sheet_html [self]
-    (let [path (.getSaveFileName QFileDialog self "Save HTML"
-                                 (.getenv os "Home") "HTML(*.html)")]
-      (if (!= (first path) "")
-        (with [file (open (first path) "w")]
-          (.write file (htmlExport.qtable->html self (get globals "header")))
-          (.close file)))))
+    (setv path (.getSaveFileName QFileDialog self "Save HTML"
+                                 (.getenv os "Home") "HTML(*.html)"))
+    (if (!= (first path) "")
+      (with [file (open (first path) "w")]
+        (.write file (htmlExport.qtable->html self (get globals "header")))
+        (.close file))))
 
   (defn used_column_count [self]
     "Returns the number of the last column with content, starts with 0 if none is used"
@@ -264,9 +264,9 @@
     'Test\tTest\tTest\n1\t1\t2\t3' -> [['Test', 'Test', 'Test'], ['1', '2', '3']]"
     (setv paste-list [])
     (setv row [])
-    (let [lns (.split (.strip clipboard-text) "\n")]
-      (print lns)
-      (for [ln lns]
-        (print ln)
-        (.append paste-list (.split ln "\t"))))
+    (setv lns (.split (.strip clipboard-text) "\n"))
+    (print lns)
+    (for [ln lns]
+      (print ln)
+      (.append paste-list (.split ln "\t")))
     paste-list))
