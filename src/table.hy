@@ -5,7 +5,8 @@
         [constants [*]]
         [globals [*]]
         [ext [htmlExport]]
-        [PyQt5.QtWidgets [QTableWidget QTableWidgetItem QFileDialog QAction]]
+        [PyQt5.QtWidgets [QTableWidget QTableWidgetItem QFileDialog QAction
+                          QTableWidgetSelectionRange]]
         [PyQt5.QtCore [QEvent Qt]])
 
 ;; =================
@@ -18,6 +19,8 @@
       (setv self.set_title set_title)
       (setv self.check_change True)
       (setv self.header_bold False)
+      (setv self.current-cell-content None)
+      (setv self.history [])
       (.init_ui self)
       (.installEventFilter self self))
 
@@ -29,6 +32,8 @@
                                 (if (get globals "header")
                                   (.set_header_style self True))))
     (.connect self.itemSelectionChanged self.set_selection)
+    (.connect self.cellChanged self.on-cell-changed)
+    (.connect self.currentCellChanged self.push-current-cell-content)
     (.show self))
 
   ;; BUG This primary clipboard is not working as it should, feature suspended
@@ -43,6 +48,54 @@
   ;     (.setSelectionMode self tmp)
   ;     (print (.itemAt self (.pos event))))
   ;   (.mousePressEvent (super) event))
+
+
+  ;; Undo
+  ;; * check for currentItemChanged -> put on undo stack
+  ;; * onDelete -> blockSignals -> delete -> put whole delete on undo stack
+  ;;   -> blockSignals false
+  ;; * onPaste -> blockSignals -> paste -> put whole paste on undo stack
+  ;;   -> blockSignals False
+  ;; * onloadFile or New File -> create new undoStack or clear undoStack
+  ;; history record is a dict {:cells :range}
+
+  (defn on-cell-changed [self row col]
+    (print "OnCELLCHANGED")
+    (.push-history self (QTableWidgetSelectionRange row col row col)))
+
+  (defn range-content [self selection-range]
+    (setv rows [])
+    (for [row (range (.topRow selection-range) (inc (.bottomRow selection-range)))]
+      (setv cols [])
+      (for [col (range (.leftColumn selection-range) (inc (.rightColumn selection-range)))]
+        (setv item (.item self row col))
+        (.append cols item))
+      (.append rows cols))
+    rows)
+
+  (defn push-history [self selection-range]
+    (setv cells (.range-content self selection-range))
+    (print "PUSHHISTORY")
+    (print (first (first cells)))
+    (print (len cells))
+    (print (len (first cells)))
+    (when (and (= (len cells) 1) (= (len (first cells)) 1))
+      (setv cells [[self.current-cell-content]]))
+    (.append self.history {:cells cells
+                           :range selection-range}) ; range of cells
+    (print (first (first (get (last self.history) :cells))))
+    (print "Old cell content: " self.current-cell-content)
+    (.push-current-cell-content self (.currentRow self) (.currentColumn self))
+    (print "New cell content: " self.current-cell-content)
+    (print))
+
+  (defn push-current-cell-content [self row col]
+    (print "push-undo")
+    (setv ccl (.item self row col))
+    (if ccl ; set text of current if any, or None
+      (setv self.current-cell-content (.text ccl))
+      (setv self.current-cell-content ccl))
+    (print self.current-cell-content))
 
   (defn set_selection [self]
     "Void -> Void
@@ -136,6 +189,7 @@
     (.update_preview self))
 
   (defn open_sheet [self &optional defpath]
+    (.blockSignals self True)
     (setv path
           (if defpath ; if defpath is not none, it mean we don't need to ask for a path
             [defpath] ; put defpath in a dict, to simulate QFileDialog
@@ -162,7 +216,8 @@
     (setv self.check_change True)
     (reset! globals "filechanged" False)
     (.set_title self)
-    (.update_preview self))
+    (.update_preview self)
+    (.blockSignals self False))
 
   (defn save_sheet_csv [self &optional defpath]
     (setv path
