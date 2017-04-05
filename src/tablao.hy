@@ -97,6 +97,8 @@
     (setv self.save_action_html (QAction "&Export as Html" self))
     (setv self.quit_action (QAction "&Quit" self))
 
+    (setv self.undo-action (QAction "Undo"))
+    (setv self.redo-action (QAction "Redo"))
     (setv self.copy_action (QAction "Copy" self))
     (setv self.paste_action (QAction "Paste" self))
     (setv self.cut_action (QAction "Cut" self))
@@ -111,6 +113,9 @@
     (.setShortcut self.save_action_html "Ctrl+E")
     (.setShortcut self.quit_action "Ctrl+Q")
 
+
+    (.setShortcut self.undo-action "Ctrl+Z")
+    (.setShortcut self.redo-action "Ctrl+Shift+Z")
     (.setShortcut self.copy_action "Ctrl+C")
     (.setShortcut self.paste_action "Ctrl+V")
     (.setShortcut self.cut_action "Ctrl+X")
@@ -127,6 +132,9 @@
     (.addSeparator self.file)
     (.addAction self.file self.quit_action)
 
+    (.addAction self.edit self.undo-action)
+    (.addAction self.edit self.redo-action)
+    (.addSeparator self.edit)
     (.addAction self.edit self.copy_action)
     (.addAction self.edit self.paste_action)
     (.addAction self.edit self.cut_action)
@@ -142,6 +150,8 @@
     (.connect self.save_action_html.triggered table.save_sheet_html)
     (.connect self.quit_action.triggered self.quit_app)
 
+    (.connect self.undo-action.triggered table.undo)
+    (.connect self.redo-action.triggered (fn [] (print "REDO")))
     (.connect self.copy_action.triggered table.copy-selection)
     (.connect self.paste_action.triggered table.paste)
     (.connect self.cut_action.triggered table.cut-selection)

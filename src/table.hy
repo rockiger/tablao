@@ -21,6 +21,7 @@
       (setv self.header_bold False)
       (setv self.current-cell-content None)
       (setv self.history [])
+      (setv self.future [])
       (.init_ui self)
       (.installEventFilter self self))
 
@@ -90,12 +91,38 @@
     (print))
 
   (defn push-current-cell-content [self row col]
-    (print "push-undo")
+    (print "push-current-cell-content")
     (setv ccl (.item self row col))
     (if ccl ; set text of current if any, or None
       (setv self.current-cell-content (.text ccl))
       (setv self.current-cell-content ccl))
     (print self.current-cell-content))
+
+  (defn undo [self]
+    "Undo changes to table"
+    (print "UNDO")
+    ;(print self.history)
+    (setv hist-entry (.pop self.history))
+    (setv cells (get hist-entry :cells))
+    (setv top-row (.topRow (get hist-entry :range)))
+    (setv bottom-row (.bottomRow (get hist-entry :range)))
+    (setv left-col (.leftColumn (get hist-entry :range)))
+    (setv right-col (.rightColumn (get hist-entry :range)))
+    (setv row-count (.rowCount (get hist-entry :range)))
+    (setv col-count (.columnCount (get hist-entry :range)))
+    (setv i 0)
+    (for [row (range top-row (+ top-row row-count))]
+      (setv j 0)
+      (for [col (range left-col (+ left-col col-count))]
+        (setv cell (get (get cells j) i))
+        (print "Hist-Entry " cell)
+        (print row col)
+        (setv item (QTableWidgetItem cell))
+        (.setItem self row col item)
+        (setv j (inc j)))
+      (setv i (inc i)))
+    (push self.future hist-entry))
+
 
   (defn set_selection [self]
     "Void -> Void
@@ -125,7 +152,6 @@
         (.setItem self row col item)
         (setv pl-cnr (inc pl-cnr)))
       (setv pl-rnr (inc pl-rnr))))
-
 
   (defn copy-selection [self &key {clipboard-mode *clipboard-mode-clipboard*}]
     "Int(0,2) -> Void
