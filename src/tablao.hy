@@ -151,7 +151,7 @@
     (.connect self.quit_action.triggered self.quit_app)
 
     (.connect self.undo-action.triggered table.undo)
-    (.connect self.redo-action.triggered (fn [] (print "REDO")))
+    (.connect self.redo-action.triggered table.redo)
     (.connect self.copy_action.triggered table.copy-selection)
     (.connect self.paste_action.triggered table.paste)
     (.connect self.cut_action.triggered table.cut-selection)

@@ -16,12 +16,16 @@
 (defclass Table [QTableWidget]
   (defn --init-- [self r c set_title]
       (.--init-- (super) r c)
-      (setv self.set_title set_title)
-      (setv self.check_change True)
-      (setv self.header_bold False)
-      (setv self.current-cell-content None)
-      (setv self.history [])
-      (setv self.future [])
+      (setv self.set_title set_title
+            self.check_change True
+            self.header_bold False
+
+
+            self.current-cell-content None
+            self.last-edit-content None
+            self.history []
+            self.hist-counter -1
+            self.future [])
       (.init_ui self)
       (.installEventFilter self self))
 
@@ -37,20 +41,6 @@
     (.connect self.currentCellChanged self.push-current-cell-content)
     (.show self))
 
-  ;; BUG This primary clipboard is not working as it should, feature suspended
-  ; (defn mousePressEvent [self event]
-  ;   (when (= (.button event) Qt.MidButton)
-  ;     (print "PASTE")
-  ;     (setv item (.itemAt self (.pos event)))
-  ;     (setv tmp (.selectionMode self))
-  ;     (.setSelectionMode self 0)
-  ;     (.setCurrentItem self item)
-  ;     (.paste self *clipboard-mode-selection*)
-  ;     (.setSelectionMode self tmp)
-  ;     (print (.itemAt self (.pos event))))
-  ;   (.mousePressEvent (super) event))
-
-
   ;; Undo
   ;; * check for currentItemChanged -> put on undo stack
   ;; * onDelete -> blockSignals -> delete -> put whole delete on undo stack
@@ -63,6 +53,7 @@
   (defn on-cell-changed [self row col]
     (print "OnCELLCHANGED")
     (.push-history self (QTableWidgetSelectionRange row col row col)))
+    ;; TODO
 
   (defn range-content [self selection-range]
     (setv rows [])
@@ -74,21 +65,30 @@
       (.append rows cols))
     rows)
 
-  (defn push-history [self selection-range]
+  (defn push-timeline [self selection-range timeline]
     (setv cells (.range-content self selection-range))
-    (print "PUSHHISTORY")
+    (print "CELLS:" cells)
     (print (first (first cells)))
-    (print (len cells))
-    (print (len (first cells)))
     (when (and (= (len cells) 1) (= (len (first cells)) 1))
       (setv cells [[self.current-cell-content]]))
-    (.append self.history {:cells cells
-                           :range selection-range}) ; range of cells
-    (print (first (first (get (last self.history) :cells))))
-    (print "Old cell content: " self.current-cell-content)
-    (.push-current-cell-content self (.currentRow self) (.currentColumn self))
-    (print "New cell content: " self.current-cell-content)
-    (print))
+    (.append timeline {:cells cells :range selection-range}) ; range of cells
+    (setv self.hist-counter (inc self.hist-counter))
+    (print "HISTORY: " self.history)
+    (print "HIST-COUNTER: " self.hist-counter)
+    (.push-current-cell-content self (.currentRow self) (.currentColumn self)))
+
+  (defn push-history [self selection-range]
+    (.push-timeline self selection-range self.history))
+
+  (defn push-future [self selection-range]
+    (setv cells (.range-content self selection-range))
+    (print "SELECTION-RANGE: " selection-range)
+    (when (and (= (len cells) 1) (= (len (first cells)) 1))
+      (setv cells [[(.text (first (first cells)))]]))
+    (.append self.future {:cells cells
+                          :range selection-range})
+
+    (.push-current-cell-content self (.currentRow self) (.currentColumn self)))
 
   (defn push-current-cell-content [self row col]
     (print "push-current-cell-content")
@@ -98,31 +98,43 @@
       (setv self.current-cell-content ccl))
     (print self.current-cell-content))
 
-  (defn undo [self]
-    "Undo changes to table"
-    (print "UNDO")
-    ;(print self.history)
-    (setv hist-entry (.pop self.history))
-    (setv cells (get hist-entry :cells))
-    (setv top-row (.topRow (get hist-entry :range)))
-    (setv bottom-row (.bottomRow (get hist-entry :range)))
-    (setv left-col (.leftColumn (get hist-entry :range)))
-    (setv right-col (.rightColumn (get hist-entry :range)))
-    (setv row-count (.rowCount (get hist-entry :range)))
-    (setv col-count (.columnCount (get hist-entry :range)))
+  (defn set-cells-from-time-entry [self time-entry]
+    "Consumes an Entry from the time-line (history or future) and
+    set this entry as the current state of the table."
+    (.blockSignals self True)
+    (setv cells (get time-entry :cells))
+    (setv top-row (.topRow (get time-entry :range)))
+    (setv bottom-row (.bottomRow (get time-entry :range)))
+    (setv left-col (.leftColumn (get time-entry :range)))
+    (setv right-col (.rightColumn (get time-entry :range)))
+    (setv row-count (.rowCount (get time-entry :range)))
+    (setv col-count (.columnCount (get time-entry :range)))
     (setv i 0)
     (for [row (range top-row (+ top-row row-count))]
       (setv j 0)
       (for [col (range left-col (+ left-col col-count))]
         (setv cell (get (get cells j) i))
-        (print "Hist-Entry " cell)
-        (print row col)
         (setv item (QTableWidgetItem cell))
         (.setItem self row col item)
         (setv j (inc j)))
       (setv i (inc i)))
-    (push self.future hist-entry))
+    (.blockSignals self False))
 
+  (defn undo [self]
+    "Undo changes to table"
+    (print "UNDO")
+    ;(print self.history)
+    (setv hist-entry (get self.history self.hist-counter))
+    (print hist-entry)
+    (.set-cells-from-time-entry self hist-entry)
+    (setv self.hist-counter (dec self.hist-counter))
+    (print "FUTURE: " self.history)
+    (print "HIST-Counter: " self.hist-counter))
+    ;; TODO set menu for undo and redo
+
+  (defn redo [self]
+    "Redo changes to table"
+    (print "REDO"))
 
   (defn set_selection [self]
     "Void -> Void
@@ -345,3 +357,18 @@
       (print ln)
       (.append paste-list (.split ln "\t")))
     paste-list))
+
+
+
+  ;; BUG This primary clipboard is not working as it should, feature suspended
+  ; (defn mousePressEvent [self event]
+  ;   (when (= (.button event) Qt.MidButton)
+  ;     (print "PASTE")
+  ;     (setv item (.itemAt self (.pos event)))
+  ;     (setv tmp (.selectionMode self))
+  ;     (.setSelectionMode self 0)
+  ;     (.setCurrentItem self item)
+  ;     (.paste self *clipboard-mode-selection*)
+  ;     (.setSelectionMode self tmp)
+  ;     (print (.itemAt self (.pos event))))
+  ;   (.mousePressEvent (super) event))
