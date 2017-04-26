@@ -2,11 +2,11 @@
 
 (import [os]
         [csv]
-        [copy]
         [helper [*]]
         [constants [*]]
         [globals [*]]
         [ext [htmlExport]]
+        [commands [Command-Paste]]
         [PyQt5.QtWidgets [QTableWidget QTableWidgetItem QFileDialog QAction
                           QTableWidgetSelectionRange QUndoStack QUndoCommand]]
         [PyQt5.QtCore [QEvent Qt]])
@@ -299,61 +299,6 @@
     (for [row (range start-row (+ start-row (len lst)))]
       (setv pl-cnr 0) ; col number in the paste-list
       (for [col (range start-col (+ start-col (len (get lst pl-rnr))))]
-        (func lst pl-rnr pl-cnr row col)
-        (setv pl-cnr (inc pl-cnr)))
-      (setv pl-rnr (inc pl-rnr)))))
-
-
-(defclass Command-Paste [QUndoCommand]
-  (defn --init-- [self table start-row start-col paste-list description]
-    (.--init-- (super Command-Paste self) description)
-    (setv self.table table
-          self.start-row start-row
-          self.start-col start-col
-          self.paste-list (.deepcopy copy paste-list)
-          self.undo-list (.deepcopy copy paste-list))
-    (.gather-undo-information self))
-
-  (defn redo [self]
-    (.map-paste-list self.table self.paste-list  self.start-row self.start-col
-      (fn [lst pl-rnr pl-cnr row col]
-        (setv val (get (get self.paste-list pl-rnr) pl-cnr))
-        (if (= val None)
-          (setv item-text "")
-          (setv item-text val))
-        (debug item-text)
-        (.setText (.item self.table row col) item-text))))
-
-  (defn undo [self]
-    (debug self.undo-list)
-    (.map-paste-list self.table self.undo-list self.start-row self.start-col
-      (fn [lst pl-rnr pl-cnr row col]
-        (setv val (get (get self.undo-list pl-rnr) pl-cnr))
-        (debug val)
-        (if (= val None)
-          (setv item-text "")
-          (setv item-text val))
-        (debug item-text)
-        (.setText (.item self.table row col) item-text))))
-
-  (defn gather-undo-information [self]
-    (debug self.paste-list)
-    (.map-paste-list self.table self.undo-list self.start-row self.start-col
-      (fn [lst pl-rnr pl-cnr row col]
-        (setv undo-row (get lst pl-rnr))
-        (assoc undo-row pl-cnr (.text (.item self.table row col)))))
-    (setv self.paste-list (.deepcopy copy self.paste-list))
-    (log "GATHER-UNDO-INFORMATION")
-    (debug self.undo-list)
-    (debug self.paste-list))
-
-  (defn map-paste-list [self lst func]
-    "list function -> Void
-    Cycles through a paste-list and uses function func on each cell"
-    (setv pl-rnr 0) ; row number in the paste-list
-    (for [row (range self.start-row (+ self.start-row (len self.paste-list)))]
-      (setv pl-cnr 0) ; col number in the paste-list
-      (for [col (range self.start-col (+ self.start-col (len (get self.paste-list pl-rnr))))]
         (func lst pl-rnr pl-cnr row col)
         (setv pl-cnr (inc pl-cnr)))
       (setv pl-rnr (inc pl-rnr)))))
