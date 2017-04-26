@@ -2,12 +2,16 @@
 
 (import [os]
         [csv]
+        [copy]
+        [helper [*]]
         [constants [*]]
         [globals [*]]
         [ext [htmlExport]]
         [PyQt5.QtWidgets [QTableWidget QTableWidgetItem QFileDialog QAction
-                          QTableWidgetSelectionRange]]
+                          QTableWidgetSelectionRange QUndoStack QUndoCommand]]
         [PyQt5.QtCore [QEvent Qt]])
+
+
 
 ;; =================
 ;; Objects
@@ -20,14 +24,17 @@
             self.check_change True
             self.header_bold False
 
-
-            self.current-cell-content None
-            self.last-edit-content None
-            self.history []
-            self.hist-counter -1
-            self.future [])
+            ;; undo/redo
+            self.undo-stack (QUndoStack self))
+      (.init-cells self)
       (.init_ui self)
       (.installEventFilter self self))
+
+  (defn init-cells [self]
+    (for [row (range (.rowCount self))]
+      (for [col (range (.columnCount self))]
+        (when (= (.item self row col) None)
+          (.setItem self row col (QTableWidgetItem))))))
 
   (defn init_ui [self]
     (.connect self.cellChanged self.c_current)
@@ -38,21 +45,10 @@
                                   (.set_header_style self True))))
     (.connect self.itemSelectionChanged self.set_selection)
     (.connect self.cellChanged self.on-cell-changed)
-    (.connect self.currentCellChanged self.push-current-cell-content)
     (.show self))
 
-  ;; Undo
-  ;; * check for currentItemChanged -> put on undo stack
-  ;; * onDelete -> blockSignals -> delete -> put whole delete on undo stack
-  ;;   -> blockSignals false
-  ;; * onPaste -> blockSignals -> paste -> put whole paste on undo stack
-  ;;   -> blockSignals False
-  ;; * onloadFile or New File -> create new undoStack or clear undoStack
-  ;; history record is a dict {:cells :range}
-
   (defn on-cell-changed [self row col]
-    (print "OnCELLCHANGED")
-    (.push-history self (QTableWidgetSelectionRange row col row col)))
+    (log "OnCELLCHANGED"))
     ;; TODO
 
   (defn range-content [self selection-range]
@@ -65,76 +61,17 @@
       (.append rows cols))
     rows)
 
-  (defn push-timeline [self selection-range timeline]
-    (setv cells (.range-content self selection-range))
-    (print "CELLS:" cells)
-    (print (first (first cells)))
-    (when (and (= (len cells) 1) (= (len (first cells)) 1))
-      (setv cells [[self.current-cell-content]]))
-    (.append timeline {:cells cells :range selection-range}) ; range of cells
-    (setv self.hist-counter (inc self.hist-counter))
-    (print "HISTORY: " self.history)
-    (print "HIST-COUNTER: " self.hist-counter)
-    (.push-current-cell-content self (.currentRow self) (.currentColumn self)))
-
-  (defn push-history [self selection-range]
-    (.push-timeline self selection-range self.history))
-
-  (defn push-future [self selection-range]
-    (setv cells (.range-content self selection-range))
-    (print "SELECTION-RANGE: " selection-range)
-    (when (and (= (len cells) 1) (= (len (first cells)) 1))
-      (setv cells [[(.text (first (first cells)))]]))
-    (.append self.future {:cells cells
-                          :range selection-range})
-
-    (.push-current-cell-content self (.currentRow self) (.currentColumn self)))
-
-  (defn push-current-cell-content [self row col]
-    (print "push-current-cell-content")
-    (setv ccl (.item self row col))
-    (if ccl ; set text of current if any, or None
-      (setv self.current-cell-content (.text ccl))
-      (setv self.current-cell-content ccl))
-    (print self.current-cell-content))
-
-  (defn set-cells-from-time-entry [self time-entry]
-    "Consumes an Entry from the time-line (history or future) and
-    set this entry as the current state of the table."
-    (.blockSignals self True)
-    (setv cells (get time-entry :cells))
-    (setv top-row (.topRow (get time-entry :range)))
-    (setv bottom-row (.bottomRow (get time-entry :range)))
-    (setv left-col (.leftColumn (get time-entry :range)))
-    (setv right-col (.rightColumn (get time-entry :range)))
-    (setv row-count (.rowCount (get time-entry :range)))
-    (setv col-count (.columnCount (get time-entry :range)))
-    (setv i 0)
-    (for [row (range top-row (+ top-row row-count))]
-      (setv j 0)
-      (for [col (range left-col (+ left-col col-count))]
-        (setv cell (get (get cells j) i))
-        (setv item (QTableWidgetItem cell))
-        (.setItem self row col item)
-        (setv j (inc j)))
-      (setv i (inc i)))
-    (.blockSignals self False))
-
   (defn undo [self]
     "Undo changes to table"
-    (print "UNDO")
-    ;(print self.history)
-    (setv hist-entry (get self.history self.hist-counter))
-    (print hist-entry)
-    (.set-cells-from-time-entry self hist-entry)
-    (setv self.hist-counter (dec self.hist-counter))
-    (print "FUTURE: " self.history)
-    (print "HIST-Counter: " self.hist-counter))
+    (log "UNDO")
     ;; TODO set menu for undo and redo
+    (.undo self.undo-stack))
 
   (defn redo [self]
     "Redo changes to table"
-    (print "REDO"))
+    (log "REDO")
+    ;; TODO set menu for undo and redo
+    (.redo self.undo-stack))
 
   (defn set_selection [self]
     "Void -> Void
@@ -146,7 +83,7 @@
     "Void (Enum(0-2)) -> Void
     Inserts the clipboard, at the upper left corner of the current selection"
     (if (> (len (.selectedRanges self)) 1)
-      (print "WARNING: Paste only works on first selection"))
+      (log "WARNING: Paste only works on first selection"))
     (setv r (first (.selectedRanges self)))
     (setv paste-list (.parse-for-paste self (first (.text (get globals "clipboard") "plain" clipboard-mode))))
     (if (= r None)
@@ -156,14 +93,8 @@
       (do
         (setv start-col (.leftColumn r))
         (setv start-row (.topRow r))))
-    (setv pl-rnr 0)
-    (for [row (range start-row (+ start-row (len paste-list)))]
-      (setv pl-cnr 0)
-      (for [col (range start-col (+ start-col (len (get paste-list pl-rnr))))]
-        (setv item (QTableWidgetItem (get (get paste-list pl-rnr) pl-cnr)))
-        (.setItem self row col item)
-        (setv pl-cnr (inc pl-cnr)))
-      (setv pl-rnr (inc pl-rnr))))
+    (setv command (Command-Paste self start-row start-col paste-list "Paste"))
+    (.push self.undo-stack command))
 
   (defn copy-selection [self &key {clipboard-mode *clipboard-mode-clipboard*}]
     "Int(0,2) -> Void
@@ -173,7 +104,7 @@
     QClipboard::FindBuffer	2	indicates that data should be stored and retrieved from the Find buffer. This mode is used for holding search strings on macOS.
     http://doc.qt.io/qt-5/qclipboard.html#Mode-enum"
     (if (> (len (.selectedRanges self)) 1)
-      (print "WARNING: Copy only works on first selection"))
+      (log "WARNING: Copy only works on first selection"))
     (setv r (first (.selectedRanges self)))
     (setv copy-content "")
     (try
@@ -189,12 +120,12 @@
             (setv copy-content (+ copy-content "\n"))))
         (.setText (get globals "clipboard") copy-content clipboard-mode))
       (except [e AttributeError]
-        (print "WARING: No selection available"))))
+        (log "WARING: No selection available"))))
 
   (defn delete-selection [self]
     "Void -> Void
     Deletes the current selection."
-    (print "DELETE-SELECTION")
+    (log "DELETE-SELECTION")
     (for [item (.selectedItems self)]
       (.setText item "")))
 
@@ -209,8 +140,8 @@
               value (try
                       (.text (.item self row col))
                       (except [e AttributeError] "")))
-        (print "The current cell is " row " " col)
-        (print "In this cell we have: " value)))
+        (log "The current cell is " row " " col)
+        (log "In this cell we have: " value)))
 
   (defn update_preview [self]
     (if self.check_change
@@ -248,14 +179,16 @@
             (setv item (QTableWidgetItem stuff))
             (.setItem self row column item)))
         (.setRowCount self *rows*)))
+    (.init-cells self)
     ;; set style for table header, if header is activated
     (if (get globals "header") (.set_header_style self True))
-    ;(print (.used_row_count self))
+    (debug (.used_row_count self))
     (setv self.check_change True)
     (reset! globals "filechanged" False)
     (.set_title self)
     (.update_preview self)
     (.blockSignals self False))
+    ;; TODO reset redo-stack
 
   (defn save_sheet_csv [self &optional defpath]
     (setv path
@@ -324,9 +257,9 @@
 
   (defn eventFilter [self object ev]
     (when (and (= (.type ev) QEvent.FocusOut) (= (.reason ev) *ActiveWindowFocusReason*))
-      (print "QtCore.QEvent.FocusOut")
-      (print (.lostFocus ev))
-      (print (.reason ev))
+      (debug "QtCore.QEvent.FocusOut")
+      (debug (.lostFocus ev))
+      (debug (.reason ev))
       (.on_focus_lost self ev))
     False)
 
@@ -337,12 +270,13 @@
   (defn set_changed [self]
     (reset! globals "filechanged" True)
     (.set_title self)
-    (print "set_changed"))
+    (log "set_changed"))
 
   (defn clear [self]
     ;(.setRowCount self 0)
     ;(.setRowCount self *rows*)))
-    (.clearContents self))
+    (.clearContents self)
+    (.init-cells self))
 
   (defn parse-for-paste [self clipboard-text]
     "String -> List[][]
@@ -352,23 +286,74 @@
     (setv paste-list [])
     (setv row [])
     (setv lns (.split (.strip clipboard-text) "\n"))
-    (print lns)
+    (debug lns)
     (for [ln lns]
-      (print ln)
+      (debug ln)
       (.append paste-list (.split ln "\t")))
-    paste-list))
+    paste-list)
+
+  (defn map-paste-list [self lst start-row start-col func]
+    "list function -> Void
+    Cycles through a paste-list and uses function func on each cell"
+    (setv pl-rnr 0) ; row number in the paste-list
+    (for [row (range start-row (+ start-row (len lst)))]
+      (setv pl-cnr 0) ; col number in the paste-list
+      (for [col (range start-col (+ start-col (len (get lst pl-rnr))))]
+        (func lst pl-rnr pl-cnr row col)
+        (setv pl-cnr (inc pl-cnr)))
+      (setv pl-rnr (inc pl-rnr)))))
 
 
+(defclass Command-Paste [QUndoCommand]
+  (defn --init-- [self table start-row start-col paste-list description]
+    (.--init-- (super Command-Paste self) description)
+    (setv self.table table
+          self.start-row start-row
+          self.start-col start-col
+          self.paste-list (.deepcopy copy paste-list)
+          self.undo-list (.deepcopy copy paste-list))
+    (.gather-undo-information self))
 
-  ;; BUG This primary clipboard is not working as it should, feature suspended
-  ; (defn mousePressEvent [self event]
-  ;   (when (= (.button event) Qt.MidButton)
-  ;     (print "PASTE")
-  ;     (setv item (.itemAt self (.pos event)))
-  ;     (setv tmp (.selectionMode self))
-  ;     (.setSelectionMode self 0)
-  ;     (.setCurrentItem self item)
-  ;     (.paste self *clipboard-mode-selection*)
-  ;     (.setSelectionMode self tmp)
-  ;     (print (.itemAt self (.pos event))))
-  ;   (.mousePressEvent (super) event))
+  (defn redo [self]
+    (.map-paste-list self.table self.paste-list  self.start-row self.start-col
+      (fn [lst pl-rnr pl-cnr row col]
+        (setv val (get (get self.paste-list pl-rnr) pl-cnr))
+        (if (= val None)
+          (setv item-text "")
+          (setv item-text val))
+        (debug item-text)
+        (.setText (.item self.table row col) item-text))))
+
+  (defn undo [self]
+    (debug self.undo-list)
+    (.map-paste-list self.table self.undo-list self.start-row self.start-col
+      (fn [lst pl-rnr pl-cnr row col]
+        (setv val (get (get self.undo-list pl-rnr) pl-cnr))
+        (debug val)
+        (if (= val None)
+          (setv item-text "")
+          (setv item-text val))
+        (debug item-text)
+        (.setText (.item self.table row col) item-text))))
+
+  (defn gather-undo-information [self]
+    (debug self.paste-list)
+    (.map-paste-list self.table self.undo-list self.start-row self.start-col
+      (fn [lst pl-rnr pl-cnr row col]
+        (setv undo-row (get lst pl-rnr))
+        (assoc undo-row pl-cnr (.text (.item self.table row col)))))
+    (setv self.paste-list (.deepcopy copy self.paste-list))
+    (log "GATHER-UNDO-INFORMATION")
+    (debug self.undo-list)
+    (debug self.paste-list))
+
+  (defn map-paste-list [self lst func]
+    "list function -> Void
+    Cycles through a paste-list and uses function func on each cell"
+    (setv pl-rnr 0) ; row number in the paste-list
+    (for [row (range self.start-row (+ self.start-row (len self.paste-list)))]
+      (setv pl-cnr 0) ; col number in the paste-list
+      (for [col (range self.start-col (+ self.start-col (len (get self.paste-list pl-rnr))))]
+        (func lst pl-rnr pl-cnr row col)
+        (setv pl-cnr (inc pl-cnr)))
+      (setv pl-rnr (inc pl-rnr)))))

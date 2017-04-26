@@ -1,6 +1,7 @@
 #! /usr/bin/env hy
 
 (import [sys]
+        [helper [*]]
         [constants [*]]
         [globals [*]]
         [table [Table]]
@@ -25,7 +26,7 @@
     (.--init-- (super))
     (.init_settings self)
     (.init_window self)
-    (print globals))
+    (log globals))
 
   (defn init_window [self]
     (setv table (Table *rows* *cols* self.set_title)
@@ -74,7 +75,7 @@
     (setv filepath (.value settings "table/filepath" :type str))
     (reset! globals "filepath" filepath)
 
-    (print (get globals "filepath")))
+    (log (get globals "filepath")))
 
 
   (defn center [self]
@@ -178,8 +179,8 @@
 
   (defn toggle_header [self table]
     (setv set_header (.sender self))
-    (print "ISCHECKED " (.isChecked set_header))
-    (print (reset! globals "header" (.isChecked set_header)))
+    (log "ISCHECKED " (.isChecked set_header))
+    (log (reset! globals "header" (.isChecked set_header)))
     (.set_header_style table (get globals "header"))
     (.update_preview (get globals "table"))
     globals)
@@ -189,13 +190,13 @@
     (setv show_preview (.sender self))
     (.setVisible preview (.isChecked show_preview))
     (.update_preview (get globals "table"))
-    (print (reset! globals "preview" (.isChecked show_preview)))
+    (log (reset! globals "preview" (.isChecked show_preview)))
     globals)
 
   (defn closeEvent [self ev]
     (setv settings (get globals "settings"))
-    (print "closeEvent")
-    (print (get globals "header"))
+    (log "closeEvent")
+    (log (get globals "header"))
     (.save_sheet_csv (get globals "table") (get globals "filepath"))
     (.setValue settings "table/header" (get globals "header"))
     (.setValue settings "window/preview" (get globals "preview"))
@@ -212,7 +213,7 @@
       (.setWindowTitle self (+ filepath
                                (if (get globals "filechanged") " * " "")
                                " — " *app_title*)))
-    (print "set_title")))
+    (debug "set_title")))
 
 ;; ==================
 ;; Main
