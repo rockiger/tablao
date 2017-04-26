@@ -1,2 +1,21 @@
 *.pyc
 test.html
+.directory
+degiro_gebühren.csv
+empty_test.csv
+export_test.html
+glossory simple gps.csv
+icon_backup.svg
+simple gps.html
+smartsteuer_kontakt.html
+smartsteuer_service.csv
+src/degiro_gebuehren.html
+src/degiro_gebuehren.html~
+src/table.py
+test.md
+test1.csv
+test_selection.csv
+turniere2017.csv
+turniere2017.html
+ubuntu-software-rangliste.html
+ubuntu-software-rangliste.csv
