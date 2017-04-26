@@ -6,12 +6,10 @@
         [constants [*]]
         [globals [*]]
         [ext [htmlExport]]
-        [commands [Command-Paste]]
+        [commands [Command-Paste Command-Delete]]
         [PyQt5.QtWidgets [QTableWidget QTableWidgetItem QFileDialog QAction
                           QTableWidgetSelectionRange QUndoStack QUndoCommand]]
         [PyQt5.QtCore [QEvent Qt]])
-
-
 
 ;; =================
 ;; Objects
@@ -126,8 +124,8 @@
     "Void -> Void
     Deletes the current selection."
     (log "DELETE-SELECTION")
-    (for [item (.selectedItems self)]
-      (.setText item "")))
+    (setv command (Command-Delete self "Delete"))
+    (.push self.undo-stack command))
 
   (defn cut-selection [self]
     (.copy-selection self)
