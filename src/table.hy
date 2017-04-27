@@ -6,7 +6,7 @@
         [constants [*]]
         [globals [*]]
         [ext [htmlExport]]
-        [commands [Command-Paste Command-Delete]]
+        [commands [Command-Paste Command-Delete Command-Cell-Edit]]
         [PyQt5.QtWidgets [QTableWidget QTableWidgetItem QFileDialog QAction
                           QTableWidgetSelectionRange QUndoStack QUndoCommand]]
         [PyQt5.QtCore [QEvent Qt]])
@@ -24,9 +24,11 @@
 
             ;; undo/redo
             self.undo-stack (QUndoStack self))
+
       (.init-cells self)
       (.init_ui self)
-      (.installEventFilter self self))
+      (.installEventFilter self self)
+      (.init-undo-cell-edits self))
 
   (defn init-cells [self]
     (for [row (range (.rowCount self))]
@@ -35,19 +37,69 @@
           (.setItem self row col (QTableWidgetItem))))))
 
   (defn init_ui [self]
-    (.connect self.cellChanged self.c_current)
+    ;(.connect self.cellChanged self.c_current)
     (.connect self.cellChanged self.update_preview)
     (.connect self.cellChanged self.set_changed)
     (.connect self.cellChanged (fn []
                                 (if (get globals "header")
                                   (.set_header_style self True))))
-    (.connect self.itemSelectionChanged self.set_selection)
     (.connect self.cellChanged self.on-cell-changed)
+    (.connect self.itemSelectionChanged self.set_selection)
+    (.connect self.cellActivated (fn [] (log "CELLACTIVATED")))
     (.show self))
 
+  ;; =======================
+  ;; START undo-cell-edits
+  ;; =======================
+  (defn init-undo-cell-edits [self]
+    "undo/redo of edits
+    The whole thing is very complicated and dirty, because we can't
+    use the standard way of using the QUndoCommand.
+    We use 2 state variables, one that carries the current cell content
+    and one that determines, if the current cell was changed.
+    Every time we enter a cell, the content is written to open-editor-content
+    and open-editor-content-changed is set to False. This is done in
+    reimplemented function self.edit. If the user changes the cell content
+    on-cell-changed is called and sets self.open-editor-content-changed
+    to true. When the user leaves the cell self.closeEditor is called.
+    If self.open-editor-content-changed is True it creates a QUndoCommand."
+
+    ;; TODO find a better way for that :)
+    (setv
+      self.open-editor-content
+      {:old "" :new "" :row 0 :col 0} ; {:text Str :row Int :col Int}
+      self.open-editor-content-changed False))
+
+  (defn edit [self index tmp1 tmp2]
+    (log "OPENEDITOR")
+    (setv txt (-> self .currentItem .text)
+          self.open-editor-content
+          {:old txt :row (.currentRow self) :col (.currentColumn self)}
+          self.open-editor-content-changed False)
+    (debug self.open-editor-content)
+    (debug self.open-editor-content-changed)
+    (.edit QTableWidget self index tmp1 tmp2))
+
   (defn on-cell-changed [self row col]
-    (log "OnCELLCHANGED"))
-    ;; TODO
+    (log "OnCELLCHANGED")
+    (setv self.open-editor-content-changed True
+          (:new self.open-editor-content)
+          (-> self
+              (.item (:row self.open-editor-content) (:col self.open-editor-content))
+              .text))
+    (debug self.open-editor-content))
+
+  (defn closeEditor [self editor hint]
+    (log "CLOSEPERSISTANTEDITOR")
+    (when self.open-editor-content-changed
+      (log "DO EDIT-COMMAND")
+      (setv command (Command-Cell-Edit self self.open-editor-content "Edit Cell"))
+      (.push self.undo-stack command))
+    (.closeEditor QTableWidget self editor hint))
+
+  ;; =======================
+  ;; END undo-cell-edits
+  ;; =======================
 
   (defn range-content [self selection-range]
     (setv rows [])

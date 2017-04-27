@@ -65,25 +65,42 @@
       (.setText item "")))
 
   (defn undo [self]
-    (.map-paste-list self.table self.undo-list self.start-row self.start-col
-      (fn [lst pl-rnr pl-cnr row col]
-        (setv val (get (get self.undo-list pl-rnr) pl-cnr))
-        (debug val)
-        (if (= val None)
-          (setv item-text "")
-          (setv item-text val))
-        (debug item-text)
-        (.setText (.item self.table row col) item-text))))
+    (for [r self.undo-ranges]
+      (.map-paste-list self.table (:undo-list r) (:start-row r) (:start-col r)
+        (fn [lst pl-rnr pl-cnr row col]
+          (setv val (get (get (:undo-list r) pl-rnr) pl-cnr))
+          (debug val)
+          (if (= val None)
+            (setv item-text "")
+            (setv item-text val))
+          (debug item-text)
+          (.setText (.item self.table row col) item-text)))))
 
   (defn gather-undo-information [self]
-    (setv r (first (.selectedRanges self.table)))
-    (setv row-list [])
-    (for [row (range (.topRow r) (inc (.bottomRow r)))]
-      (setv col-list [])
-      (for [col (range (.leftColumn r) (inc (.rightColumn r)))]
-        (setv item (.text (.item self.table row col)))
-        (.append col-list item))
-      (.append row-list col-list))
-    (setv self.undo-list row-list
-          self.start-row (.topRow r)
-          self.start-col (.leftColumn r))))
+    (setv self.undo-ranges [])
+    (for [r (.selectedRanges self.table)]
+      (setv row-list [])
+      (for [row (range (.topRow r) (inc (.bottomRow r)))]
+        (setv col-list [])
+        (for [col (range (.leftColumn r) (inc (.rightColumn r)))]
+          (setv item (.text (.item self.table row col)))
+          (.append col-list item))
+        (.append row-list col-list))
+      (.append self.undo-ranges
+               {:undo-list row-list
+                :start-row (.topRow r)
+                :start-col (.leftColumn r)}))))
+
+(defclass Command-Cell-Edit [QUndoCommand]
+    (defn --init-- [self table cell description]
+      (.--init-- (super Command-Cell-Edit self) description)
+      (setv self.table table
+            self.cell (.deepcopy copy cell)))
+
+    (defn redo [self]
+      (debug self.cell)
+      (.setText (.item self.table (:row self.cell) (:col self.cell)) (:new self.cell)))
+
+    (defn undo [self]
+      (debug self.cell)
+      (.setText (.item self.table (:row self.cell) (:col self.cell)) (:old self.cell))))
