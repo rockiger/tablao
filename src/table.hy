@@ -205,6 +205,7 @@
     (reset! globals "filepath" *untitled_path*)
     (.clear self)
     (.save_sheet_csv self (get globals "filepath"))
+    (.clear self.undo-stack)
     (.update_preview self))
 
   (defn open_sheet [self &optional defpath]
@@ -237,6 +238,7 @@
     (reset! globals "filechanged" False)
     (.set_title self)
     (.update_preview self)
+    (.clear self.undo-stack)
     (.blockSignals self False))
     ;; TODO reset redo-stack
 

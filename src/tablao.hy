@@ -99,7 +99,9 @@
     (setv self.quit_action (QAction "&Quit" self))
 
     (setv self.undo-action (QAction "Undo"))
+    (.setEnabled self.undo-action False)
     (setv self.redo-action (QAction "Redo"))
+    (.setEnabled self.redo-action False)
     (setv self.copy_action (QAction "Copy" self))
     (setv self.paste_action (QAction "Paste" self))
     (setv self.cut_action (QAction "Cut" self))
@@ -113,7 +115,6 @@
     (.setShortcut self.save_action_csv "Ctrl+Shift+S")
     (.setShortcut self.save_action_html "Ctrl+E")
     (.setShortcut self.quit_action "Ctrl+Q")
-
 
     (.setShortcut self.undo-action "Ctrl+Z")
     (.setShortcut self.redo-action "Ctrl+Shift+Z")
@@ -153,6 +154,9 @@
 
     (.connect self.undo-action.triggered table.undo)
     (.connect self.redo-action.triggered table.redo)
+    (.connect table.undo-stack.canUndoChanged self.set-undo-entry)
+    (.connect table.undo-stack.canRedoChanged self.set-redo-entry)
+
     (.connect self.copy_action.triggered table.copy-selection)
     (.connect self.paste_action.triggered table.paste)
     (.connect self.cut_action.triggered table.cut-selection)
@@ -213,7 +217,18 @@
       (.setWindowTitle self (+ filepath
                                (if (get globals "filechanged") " * " "")
                                " — " *app_title*)))
-    (debug "set_title")))
+    (debug "set_title"))
+
+  (defn set-undo-entry [self can-undo]
+    (if can-undo
+      (.setEnabled self.undo-action True)
+      (.setEnabled self.undo-action False)))
+
+  (defn set-redo-entry [self can-redo]
+    (if can-redo
+      (.setEnabled self.redo-action True)
+      (.setEnabled self.redo-action False))))
+
 
 ;; ==================
 ;; Main
