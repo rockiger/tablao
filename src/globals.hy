@@ -9,7 +9,7 @@
 (def globals {"header" True
               "preview" True
               "settings" (QSettings "Rockiger" "Tablao")
-              "filepath" ""
+              "filepath" "./Welcome To Tablao.csv" ; TODO Change accordingly to location where file get's installed
               "filechanged" False
               "table" None     ; QTableWidget that holds the table
               "webview" None ; Webview for preview

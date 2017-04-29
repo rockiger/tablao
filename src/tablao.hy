@@ -5,10 +5,11 @@
         [constants [*]]
         [globals [*]]
         [table [Table]]
+        [exportdialog [Export-Dialog]]
         [ext [htmlExport]]
         [PyQt5.QtWidgets [QApplication QMainWindow QDesktopWidget
                           qApp QAction QWidget QSplitter]]
-        [PyQt5.QtCore [QSettings QPoint QUrl Qt]]
+        [PyQt5.QtCore [QPoint QUrl Qt]]
         [PyQt5.QtWebKitWidgets [QWebView]])
 
 ;; =================
@@ -106,6 +107,7 @@
     (setv self.paste_action (QAction "Paste" self))
     (setv self.cut_action (QAction "Cut" self))
     (setv self.delete_action (QAction "Delete" self))
+    (setv self.copy-html-action (QAction "Copy HTML" self))
 
     (setv self.set_header_action (QAction "Create table header" self))
     (setv self.set_preview_action (QAction "Toggle preview" self))
@@ -122,6 +124,7 @@
     (.setShortcut self.paste_action "Ctrl+V")
     (.setShortcut self.cut_action "Ctrl+X")
     (.setShortcuts self.delete_action [Qt.Key_Delete Qt.Key_Backspace])
+    (.setShortcut self.copy-html-action "Ctrl+Shift+C")
 
     (.setShortcut self.set_header_action "Ctrl+Shift+H")
     (.setShortcut self.set_preview_action "Ctrl+Shift+P")
@@ -140,6 +143,8 @@
     (.addAction self.edit self.copy_action)
     (.addAction self.edit self.paste_action)
     (.addAction self.edit self.cut_action)
+    (.addSeparator self.edit)
+    (.addAction self.edit self.copy-html-action)
     (.addSeparator self.edit)
     (.addAction self.edit self.delete_action)
 
@@ -160,6 +165,7 @@
     (.connect self.copy_action.triggered table.copy-selection)
     (.connect self.paste_action.triggered table.paste)
     (.connect self.cut_action.triggered table.cut-selection)
+    (.connect self.copy-html-action.triggered self.export-html)
     (.connect self.delete_action.triggered table.delete-selection)
 
     (.setCheckable self.set_header_action True)
@@ -227,8 +233,16 @@
   (defn set-redo-entry [self can-redo]
     (if can-redo
       (.setEnabled self.redo-action True)
-      (.setEnabled self.redo-action False))))
+      (.setEnabled self.redo-action False)))
 
+  (defn export-html [self]
+    "Void -> Void
+    Creates a Export-Dialog and presents the HTML to the user"
+    (setv html-string (htmlExport.qtable->html
+                       (get globals "table")
+                       (get globals "header"))
+          export-dialog (Export-Dialog self html-string))
+    (.show export-dialog)))
 
 ;; ==================
 ;; Main
