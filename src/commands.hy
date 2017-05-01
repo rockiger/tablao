@@ -62,7 +62,9 @@
 
   (defn redo [self]
     (for [item (.selectedItems self.table)]
-      (.setText item "")))
+      (.blockSignals self.table True)
+      (.setText item "")
+      (.blockSignals self.table True)))
 
   (defn undo [self]
     (for [r self.undo-ranges]

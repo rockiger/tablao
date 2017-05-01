@@ -325,10 +325,12 @@
     (log "set_changed"))
 
   (defn clear [self]
+    (.blockSignals self True)
     ;(.setRowCount self 0)
     ;(.setRowCount self *rows*)))
     (.clearContents self)
-    (.init-cells self))
+    (.init-cells self)
+    (.blockSignals self False))
 
   (defn parse-for-paste [self clipboard-text]
     "String -> List[][]
@@ -351,6 +353,8 @@
     (for [row (range start-row (+ start-row (len lst)))]
       (setv pl-cnr 0) ; col number in the paste-list
       (for [col (range start-col (+ start-col (len (get lst pl-rnr))))]
+        (.blockSignals self True)
         (func lst pl-rnr pl-cnr row col)
+        (.blockSignals self False)
         (setv pl-cnr (inc pl-cnr)))
       (setv pl-rnr (inc pl-rnr)))))
