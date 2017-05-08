@@ -357,4 +357,6 @@
         (func lst pl-rnr pl-cnr row col)
         (.blockSignals self False)
         (setv pl-cnr (inc pl-cnr)))
+      (.update_preview self)
+      (.set_changed self)
       (setv pl-rnr (inc pl-rnr)))))

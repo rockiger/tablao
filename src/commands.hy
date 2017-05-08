@@ -64,7 +64,9 @@
     (for [item (.selectedItems self.table)]
       (.blockSignals self.table True)
       (.setText item "")
-      (.blockSignals self.table True)))
+      (.blockSignals self.table True)
+      (.update_preview self.table)
+      (.set_changed self.table)))
 
   (defn undo [self]
     (for [r self.undo-ranges]
