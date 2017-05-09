@@ -45,20 +45,20 @@
 
     (.addWidget central_widget table)
     (.addWidget central_widget webview)
-    (.setSizes central_widget (, 50 50))
+    (.setSizes central_widget (, 50 77))
 
     (.setHorizontalHeaderLabels table *col_headers*)
 
 
     ;(.load webview (QUrl "file:/home/macco/Listings/tablao/test.html"))
 
-    (.->menu self table)
+    (.create-menu self table)
 
     (if (get globals "filepath")
       (.open_sheet table (get globals "filepath")))
 
 
-    (.setHtml webview (htmlExport.->preview table (get globals "header") *previewHeader* *previewFooter*))
+    (.setHtml webview (htmlExport.create_preview table (get globals "header") *previewHeader* *previewFooter*))
 
     (.show self)
     (.setVisible webview (get globals "preview")))
@@ -92,7 +92,7 @@
     (.moveCenter qr cp)
     (.move self (.topLeft qr)))
 
-  (defn ->menu [self table]
+  (defn create-menu [self table]
     (setv self.bar (.menuBar self))
     (setv self.file (.addMenu self.bar "File"))
     (setv self.edit (.addMenu self.bar "Edit"))
@@ -244,7 +244,7 @@
   (defn export-html [self]
     "Void -> Void
     Creates a Export-Dialog and presents the HTML to the user"
-    (setv html-string (htmlExport.qtable->html
+    (setv html-string (htmlExport.qtable-to-html
                        (get globals "table")
                        (get globals "header"))
           export-dialog (Export-Dialog self html-string))
@@ -254,9 +254,12 @@
 ;; Main
 ;; ==================
 
-(defmain [&rest args]
+(defn main []
   (setv app (QApplication sys.argv)
         mainWindow (MainWindow)
         clipboard (.clipboard QApplication))
   (reset! globals "clipboard" clipboard)
   (.exit sys (.exec_ app)))
+
+(when (= __name__ "__main__")
+  (main))

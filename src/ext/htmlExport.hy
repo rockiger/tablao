@@ -1,4 +1,4 @@
-(defn qtable->html [qtable header]
+(defn qtable-to-html [qtable header]
   "QTableWidget Bool -> String
    Consumes a QTableWidget qtable and if header is true
    produces a string with that table in HTML"
@@ -71,8 +71,8 @@
                    (dec (.used_column_count qtable)))
        "\n  </tbody>\n</table>")))
 
-(defn ->preview [qtable theader? header footer]
+(defn create_preview [qtable theader? header footer]
     "QTableWidget Bool String String -> String
      Consumes a QTableWidget qtable, if the tableheader theader is true, the strings for the header and footer of the html
      produces a string with that documen in HTML"
-     (+ header (qtable->html qtable theader?) footer))
+     (+ header (qtable-to-html qtable theader?) footer))

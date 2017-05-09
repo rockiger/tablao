@@ -195,7 +195,7 @@
 
   (defn update_preview [self]
     (if self.check_change
-      (.setHtml (get globals "webview") (htmlExport.->preview self (get globals "header") *previewHeader* *previewFooter*))))
+      (.setHtml (get globals "webview") (htmlExport.create_preview self (get globals "header") *previewHeader* *previewFooter*))))
 
   (defn new_sheet [self]
     (if (and (= (get globals "filepath") *untitled_path*)
@@ -268,7 +268,7 @@
                                  (.getenv os "Home") "HTML(*.html)"))
     (if (!= (first path) "")
       (with [file (open (first path) "w")]
-        (.write file (htmlExport.qtable->html self (get globals "header")))
+        (.write file (htmlExport.qtable-to-html self (get globals "header")))
         (.close file))))
 
   (defn used_column_count [self]
