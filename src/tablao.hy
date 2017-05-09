@@ -10,7 +10,7 @@
         [PyQt5.QtWidgets [QApplication QMainWindow QDesktopWidget
                           qApp QAction QWidget QSplitter]]
         [PyQt5.QtCore [QPoint QUrl Qt]]
-        [PyQt5.QtWebKitWidgets [QWebView]])
+        [PyQt5.QtWebEngineWidgets [QWebEngineView]])
 
 ;; =================
 ;; Data-definitions
@@ -32,7 +32,7 @@
   (defn init_window [self]
     (setv table (Table *rows* *cols* self.set_title)
           central_widget (QSplitter)
-          webview (QWebView))
+          webview (QWebEngineView))
 
     (reset! globals "table" table)
     (reset! globals "webview" webview)

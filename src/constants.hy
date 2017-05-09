@@ -1,6 +1,7 @@
 #! /usr/bin/env hy
 
-(import [PyQt5.QtGui [QIcon]])
+(import [sys]
+        [PyQt5.QtGui [QIcon]])
 
 ;; ============
 ;; Constants
@@ -8,7 +9,7 @@
 (def *col_headers* (.split "A B C D E F G H I J K L M N O P Q R S T U V W X Y Z"))
 (def *rows* 99)
 (def *cols* (len *col_headers*))
-(def *width* 1200)
+(def *width* 1440)
 (def *height* 800)
 (def *app_title* "Tablao")
 (def *icon* (QIcon "../icon.svg"))
@@ -16,7 +17,8 @@
 (def *untitled_path* "/tmp/tablao_untitled")
 (def *clipboard-mode-clipboard* 0)
 (def *clipboard-mode-selection* 1)
-(def *previewHeader*
+(print sys.platform)
+(def *previewHeader-first-part*
      "<!DOCTYPE html>
      <html>
        <head>
@@ -61,10 +63,68 @@
            th {
                text-align: left;
            }
+           ")
+(def *previewHeader-breeze-scrollbar-style*
+        (if (= "linux" sys.platform)
+           "
+           ::-webkit-scrollbar
+            {
+            	background: #eff0f1;
+            	width: 6px;
+            	height: 6px;
+            }
+
+            ::-webkit-scrollbar-button
+            {
+            	width: 0px;
+            	height: 0px;
+            }
+
+            ::-webkit-scrollbar-thumb
+            {
+            	background: #3DAEE9;
+            	border-radius: 50px;
+            }
+
+            ::-webkit-scrollbar-thumb:hover, ::-webkit-scrollbar-thumb:window-inactive:hover
+            {
+              	background: #93cee9;
+            }
+
+            ::-webkit-scrollbar-track
+            {
+            	background: #eff0f1;
+            	border-radius: 50px;
+            }
+
+            ::-webkit-scrollbar-track:hover
+            {
+            	background: rgba(106, 110, 113, 0.3);
+            }
+
+            ::-webkit-scrollbar-corner
+            {
+              	background: transparent;
+            }
+
+            ::-webkit-scrollbar-thumb:window-inactive
+            {
+            	background: #909396;
+            	border-radius: 50px;
+            }
+            "
+            ""))
+
+(def *previewHeader-last-part*
+         "
          </style>
        </head>
        <body>
        ")
+(def *previewHeader*
+  (+   *previewHeader-first-part*
+       *previewHeader-breeze-scrollbar-style*
+       *previewHeader-last-part*))
 (def *previewFooter*
      "  </body>
       </html>")
