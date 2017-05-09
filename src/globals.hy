@@ -9,11 +9,12 @@
 (def globals {"header" True
               "preview" True
               "settings" (QSettings "Rockiger" "Tablao")
-              "filepath" "./Welcome To Tablao.csv" ; TODO Change accordingly to location where file get's installed
+              "filepath" "./Welcome-To-Tablao.csv" ; TODO Change accordingly to location where file get's installed
               "filechanged" False
               "table" None     ; QTableWidget that holds the table
               "webview" None ; Webview for preview
-              "clipboard" None})
+              "clipboard" None
+              "second-run" False})
 
 ;; ==============
 ;; Functions

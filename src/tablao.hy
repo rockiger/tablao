@@ -67,14 +67,19 @@
     (setv settings (get globals "settings")
           menu (.menuBar self)
           set_header_action (.actionAt menu (QPoint 0 0)))
-    (setv header (.value settings "table/header" :type bool))
-    (reset! globals "header" header)
 
-    (setv preview (.value settings "window/preview" :type bool))
-    (reset! globals "preview" preview)
+    (setv second-run (.value settings "app/second-run" :type bool))
+    (reset! globals "second-run" second-run)
 
-    (setv filepath (.value settings "table/filepath" :type str))
-    (reset! globals "filepath" filepath)
+    (when second-run
+      (setv header (.value settings "table/header" :type bool))
+      (reset! globals "header" header)
+
+      (setv preview (.value settings "window/preview" :type bool))
+      (reset! globals "preview" preview)
+
+      (setv filepath (.value settings "table/filepath" :type str))
+      (reset! globals "filepath" filepath))
 
     (log (get globals "filepath")))
 
@@ -211,6 +216,7 @@
     (.setValue settings "table/header" (get globals "header"))
     (.setValue settings "window/preview" (get globals "preview"))
     (.setValue settings "table/filepath" (get globals "filepath"))
+    (.setValue settings "app/second-run" True)
     (.sync settings))
 
   (defn set_title [self]
