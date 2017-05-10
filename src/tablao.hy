@@ -104,9 +104,9 @@
     (setv self.save_action_html (QAction "&Export as Html" self))
     (setv self.quit_action (QAction "&Quit" self))
 
-    (setv self.undo-action (QAction "Undo"))
+    (setv self.undo-action (QAction "Undo" self))
     (.setEnabled self.undo-action False)
-    (setv self.redo-action (QAction "Redo"))
+    (setv self.redo-action (QAction "Redo" self))
     (.setEnabled self.redo-action False)
     (setv self.copy_action (QAction "Copy" self))
     (setv self.paste_action (QAction "Paste" self))

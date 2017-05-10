@@ -12,7 +12,7 @@
 (def *width* 1440)
 (def *height* 800)
 (def *app_title* "Tablao")
-(def *icon* (QIcon "../icon.svg"))
+(def *icon* (QIcon "./icon.svg"))
 (def *ActiveWindowFocusReason* 3)
 (def *untitled_path* "/tmp/tablao_untitled")
 (def *clipboard-mode-clipboard* 0)
