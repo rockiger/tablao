@@ -45,11 +45,10 @@ class Table(QTableWidget):
 
     def edit(self, index, tmp1, tmp2):
         log('OPENEDITOR')
-        txt = self.currentItem().text()
+        item = self.currentItem()
+        txt = (item.text() if item else '')
         self.open_editor_content = {'\ufdd0:old': txt, '\ufdd0:row': self.currentRow(), '\ufdd0:col': self.currentColumn(), }
         self.open_editor_content_changed = False
-        debug(self.open_editor_content)
-        debug(self.open_editor_content_changed)
         return QTableWidget.edit(self, index, tmp1, tmp2)
 
     def on_cell_changed(self, row, col):
