@@ -72,12 +72,11 @@
 
   (defn edit [self index tmp1 tmp2]
     (log "OPENEDITOR")
-    (setv txt (-> self .currentItem .text)
+    (setv item (.currentItem self)
+          txt (if item (.text item) "")
           self.open-editor-content
           {:old txt :row (.currentRow self) :col (.currentColumn self)}
           self.open-editor-content-changed False)
-    (debug self.open-editor-content)
-    (debug self.open-editor-content-changed)
     (.edit QTableWidget self index tmp1 tmp2))
 
   (defn on-cell-changed [self row col]
