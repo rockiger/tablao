@@ -248,7 +248,7 @@
             (.getSaveFileName QFileDialog self "Save CSV"
                                  (.getenv os "Home") "CSV(*.csv)")))
     (if (!= (first path) "")
-      (with [csv_file (open (first path) "w")]
+      (with [csv_file (open (first path) "w" :newline "")]
         (setv writer (.writer csv csv_file :dialect "excel"))
         (for [row (range (inc (.used_row_count self)))]
           (setv row_data [])
