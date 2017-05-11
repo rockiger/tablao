@@ -9,7 +9,7 @@
         [ext [htmlExport]]
         [PyQt5.QtWidgets [QApplication QMainWindow QDesktopWidget
                           qApp QAction QWidget QSplitter]]
-        [PyQt5.QtCore [QPoint QUrl Qt]]
+        [PyQt5.QtCore [QPoint Qt]]
         [PyQt5.QtWebEngineWidgets [QWebEngineView]])
 
 ;; =================

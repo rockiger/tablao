@@ -1,7 +1,8 @@
 #! /usr/bin/env hy
 
 (import [sys]
-        [PyQt5.QtGui [QIcon]])
+        [PyQt5.QtGui [QIcon]]
+        [PyQt5.QtCore [QDir]])
 
 ;; ============
 ;; Constants
@@ -14,7 +15,7 @@
 (def *app_title* "Tablao")
 (def *icon* (QIcon "./icon.svg"))
 (def *ActiveWindowFocusReason* 3)
-(def *untitled_path* "/tmp/tablao_untitled")
+(def *untitled_path* (+ (QDir.tempPath) "/tablao_untitled"))
 (def *clipboard-mode-clipboard* 0)
 (def *clipboard-mode-selection* 1)
 (print sys.platform)
