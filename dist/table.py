@@ -177,7 +177,7 @@ class Table(QTableWidget):
         reset_bang(globals, 'filepath', first(path))
         self.check_change = False
         if (first(path) != ''):
-            with open(first(path), newline='') as csv_file:
+            with open(first(path), 'r', newline='') as csv_file:
                 self.setRowCount(0)
                 my_file = csv.reader(csv_file, dialect='excel')
                 for row_data in my_file:
@@ -204,7 +204,7 @@ class Table(QTableWidget):
     def save_sheet_csv(self, defpath=None):
         path = ([defpath] if defpath else QFileDialog.getSaveFileName(self, 'Save CSV', os.getenv('Home'), 'CSV(*.csv)'))
         if (first(path) != ''):
-            with open(first(path), 'w') as csv_file:
+            with open(first(path), 'w', newline='') as csv_file:
                 writer = csv.writer(csv_file, dialect='excel')
                 for row in range(inc(self.used_row_count())):
                     row_data = []

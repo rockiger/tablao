@@ -217,7 +217,7 @@
     (reset! globals "filepath" (first path))
     (setv self.check_change False)
     (if (!= (first path) "")
-      (with [csv_file (open (first path) :newline "")]
+      (with [csv_file (open (first path) "r" :newline "")]
         (.setRowCount self 0)
         (setv my_file (.reader csv csv_file :dialect "excel"))
         (for [row_data my_file]

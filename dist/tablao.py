@@ -6,7 +6,7 @@ from table import Table
 from exportdialog import Export_Dialog
 from ext import htmlExport
 from PyQt5.QtWidgets import QApplication, QMainWindow, QDesktopWidget, qApp, QAction, QWidget, QSplitter
-from PyQt5.QtCore import QPoint, QUrl, Qt
+from PyQt5.QtCore import QPoint, Qt
 from PyQt5.QtWebEngineWidgets import QWebEngineView
 
 
@@ -73,9 +73,9 @@ class MainWindow(QMainWindow):
         self.save_action_csv = QAction('&Save as ...', self)
         self.save_action_html = QAction('&Export as Html', self)
         self.quit_action = QAction('&Quit', self)
-        self.undo_action = QAction('Undo')
+        self.undo_action = QAction('Undo', self)
         self.undo_action.setEnabled(False)
-        self.redo_action = QAction('Redo')
+        self.redo_action = QAction('Redo', self)
         self.redo_action.setEnabled(False)
         self.copy_action = QAction('Copy', self)
         self.paste_action = QAction('Paste', self)

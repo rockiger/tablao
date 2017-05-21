@@ -1,14 +1,15 @@
 import sys
 from PyQt5.QtGui import QIcon
+from PyQt5.QtCore import QDir
 COL_HEADERS = 'A B C D E F G H I J K L M N O P Q R S T U V W X Y Z'.split()
 ROWS = 99
 COLS = len(COL_HEADERS)
 WIDTH = 1440
 HEIGHT = 800
 APP_TITLE = 'Tablao'
-ICON = QIcon('../icon.svg')
+ICON = QIcon('./icon.svg')
 ACTIVEWINDOWFOCUSREASON = 3
-UNTITLED_PATH = '/tmp/tablao_untitled'
+UNTITLED_PATH = (QDir.tempPath() + '/tablao_untitled')
 CLIPBOARD_MODE_CLIPBOARD = 0
 CLIPBOARD_MODE_SELECTION = 1
 print(sys.platform)
