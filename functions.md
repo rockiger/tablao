@@ -1,0 +1,79 @@
+<table>
+  <tbody>
+      <td><h2>Functions</h2></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td><h3>Function</h3></td>
+      <td><h3>Shortcut</h3></td>
+    </tr>
+    <tr>
+      <td><h4>File-Menu</h4></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td><strong>New Table</strong></td>
+      <td><kbd>Ctrl+N</kbd></td>
+    </tr>
+    <tr>
+      <td><strong>Open File</strong></td>
+      <td><kbd>Ctrl+O</kbd></td>
+    </tr>
+    <tr>
+      <td><strong>Save File as ...</strong></td>
+      <td><kbd>Ctrl+Shift+S</kbd></td>
+    </tr>
+    <tr>
+      <td><strong>Export as HTML</strong></td>
+      <td><kbd>Ctrl+E</kbd></td>
+    </tr>
+    <tr>
+      <td><strong>Quit</strong></td>
+      <td><kbd>Ctrl+Shift+S</kbd></td>
+    </tr>
+    <tr>
+      <td><h4>Edit-Menu</h4></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td><strong>Undo</strong></td>
+      <td><kbd>Ctrl+Z</kbd></td>
+    </tr>
+    <tr>
+      <td><strong>Redo</strong></td>
+      <td><kbd>Ctrl+Shift+Z</kbd></td>
+    </tr>
+    <tr>
+      <td><strong>Copy</strong></td>
+      <td><kbd>Ctrl+C</kbd></td>
+    </tr>
+    <tr>
+      <td><strong>Paste</strong></td>
+      <td><kbd>Ctrl+V</kbd></td>
+    </tr>
+    <tr>
+      <td><strong>Cut</strong></td>
+      <td><kbd>Ctrl+X</kbd></td>
+    </tr>
+    <tr>
+      <td><strong>Copy HTML</strong></td>
+      <td><kbd>Ctrl+Shift+C</kbd></td>
+    </tr>
+    <tr>
+      <td><strong>Del</strong></td>
+      <td><kbd>Del</kbd></td>
+    </tr>
+    <tr>
+      <td><h4>View-Menu</h4></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td><strong>Create Table Header</strong></td>
+      <td><kbd>Ctrl+Shift+T</kbd></td>
+    </tr>
+    <tr>
+      <td><strong>Toggle Preview</strong></td>
+      <td><kbd>Ctrl+Shift+P</kbd></td>
+    </tr>
+  </tbody>
+</table>
